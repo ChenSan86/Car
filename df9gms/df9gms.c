@@ -34,7 +34,7 @@ int main()
     wiringXPWMSetPolarity(PWM_PIN, 0);       // 0-normal, 1-inversed
     wiringXPWMEnable(PWM_PIN, 1);            // 1-enable, 0-disable
 
-    delayMicroseconds(1000000); // 1s
+    delayMicroseconds(1000000); // 1s :1000000us
 
     for (i = 10000; i< 3000000; i += 10000) // 10 us 步进
     {
