@@ -1,12 +1,17 @@
 #include <stdio.h>
 #include "move.h"
+#include <unistd.h>
+#include <wiringx.h>
+#include <math.h>
+
+int speedr = 70, speedl = 70;
 void initMove()
 {
 
     if (wiringXSetup("milkv_duo", NULL) == -1)
     {
         wiringXGC();
-        return -1;
+        return;
     }
     wiringXPWMSetPeriod(PWM_1, PERIOD); // 500us
     wiringXPWMSetPolarity(PWM_1, 0);

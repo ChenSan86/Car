@@ -1,4 +1,4 @@
-scp -O web root@192.168.42.1:/root/
+scp -O main root@192.168.42.1:/root/
 首先控制函数都包含在move.h文件中
 核心函数有motor_run（long left，long right）
 这个函数会接收两个long值，分别代表左右轮的速度具体意义为每个电机最大速度的百分比（例如填88，电机就会转到最大速度的88%，填0就会静止，填负数会反转）
