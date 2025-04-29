@@ -1,71 +1,74 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <wiringx.h>
 
 // 引脚定义
-#define IN1 11
-#define IN2 12
-#define ENA 4 // PWM控制引脚
+#define IN1 11 // 电机方向控制1
+#define IN2 12 // 电机方向控制2
+#define ENA 4 // PWM调速引脚 (必须支持PWM)
 
-// PWM参数
-#define PWM_PERIOD 2000000     // 2ms周期（比标准20ms快10倍！）
-#define PWM_MIN_DUTY 50000     // 0.05ms（最小有效占空比）
-#define PWM_MAX_DUTY 500000    // 0.5ms（100%速度）
-#define DUTY_25_PERCENT 150000 // 25%速度（实测优化值）
-#define RUN_DURATION 5000000   // 5秒运行时间
-
-// 设置电机方向
-void setDirection(int forward)
-{
-    digitalWrite(IN1, forward ? 1 : 0);
-    digitalWrite(IN2, forward ? 0 : 1);
-}
-
-// 设置固定速度运行指定时间
-void runMotor(int direction, long duty, long duration_us)
-{
-    setDirection(direction);
-    wiringXPWMSetDuty(ENA, duty);
-    printf("[Motor] %s | Duty: %ld ns (%.0f%%)\n",
-           direction ? "Forward " : "Backward",
-           duty,
-           (duty - PWM_MIN_DUTY) * 100.0 / (PWM_MAX_DUTY - PWM_MIN_DUTY));
-    usleep(duration_us);
-}
+// PWM参数 (单位:纳秒)
+#define PWM_PERIOD 20000 // 20ms周期(500Hz)
+#define PWM_MIN 1000     // 最小脉宽1ms
+#define PWM_MAX 2000     // 最大脉宽2ms
+#define PWM_STOP 1500    // 停止脉宽1.5ms
 
 int main()
 {
-    // 初始化检查
+    // 初始化WiringX
     if (wiringXSetup("milkv_duo", NULL) == -1)
     {
-        wiringXGC();
+        printf("WiringX初始化失败！\n");
         return -1;
     }
 
-    // 引脚模式设置
+    // 设置引脚模式
     pinMode(IN1, PINMODE_OUTPUT);
     pinMode(IN2, PINMODE_OUTPUT);
 
-    // PWM配置
+    // 配置PWM
     wiringXPWMSetPeriod(ENA, PWM_PERIOD);
-    wiringXPWMSetPolarity(ENA, 0);
-    wiringXPWMEnable(ENA, 1);
+    wiringXPWMSetDuty(ENA, PWM_STOP); // 初始停止状态
+    wiringXPWMEnable(ENA, 1);         // 启用PWM
 
-    printf("=== Motor Speed Test ===\n");
+    printf("L298N PWM调速测试开始\n");
 
-    // 正向测试序列
-    runMotor(1, DUTY_25_PERCENT, RUN_DURATION);  // 正向25%速度 5秒
-    runMotor(1, PWM_MAX_DUTY, RUN_DURATION); // 正向100%速度 5秒
+    // 正转加速测试
+    printf("正转加速...\n");
+    digitalWrite(IN1, 1);
+    digitalWrite(IN2, 0);
 
-    // 反向测试序列
-    runMotor(0, DUTY_25_PERCENT, RUN_DURATION);  // 反向25%速度 5秒
-    runMotor(0, PWM_MAX_DUTY, RUN_DURATION); // 反向100%速度 5秒
+    for (int duty = PWM_MIN; duty <= PWM_MAX; duty += 100)
+    {
+        wiringXPWMSetDuty(ENA, duty);
+        printf("Duty: %d ns\n", duty);
+        delayMicroseconds(2000000); // 每100ms加速一次
+    }
+    delayMicroseconds(2000000); // 全速运行2秒
+    //两秒等于多少微秒？
+
+
+    // 减速停止
+    printf("减速停止...\n");
+    for (int duty = PWM_MAX; duty >= PWM_MIN; duty -= 100)
+    {
+        wiringXPWMSetDuty(ENA, duty);
+        printf("Duty: %d ns\n", duty);
+        delayMicroseconds(2000000);
+    }
+
+    // 反转测试
+    printf("反转测试...\n");
+    digitalWrite(IN1, 0);
+    digitalWrite(IN2, 1);
+    wiringXPWMSetDuty(ENA, PWM_MAX);
+    delayMicroseconds(2000000);
 
     // 完全停止
-    wiringXPWMSetDuty(ENA, 0);
+    printf("停止电机\n");
     digitalWrite(IN1, 0);
     digitalWrite(IN2, 0);
-    printf("Motor stopped.\n");
+    wiringXPWMSetDuty(ENA, PWM_STOP);
 
+    wiringXGC(); // 清理资源
     return 0;
 }

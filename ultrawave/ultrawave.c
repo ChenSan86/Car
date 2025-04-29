@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <wiringx.h>
 
+
 #define TRIG 6 // 触发引脚（输出）
 #define ECHO 7 // 回响引脚（输入）
 

@@ -1,1 +1,15 @@
-scp -O l298n root@192.168.42.1:/root/
+scp -O web root@192.168.42.1:/root/
+首先控制函数都包含在move.h文件中
+核心函数有motor_run（long left，long right）
+这个函数会接收两个long值，分别代表左右轮的速度具体意义为每个电机最大速度的百分比（例如填88，电机就会转到最大速度的88%，填0就会静止，填负数会反转）
+getTrace() 这个函数会修改头文件中定义的数组trace，trace数组长度为9，1-8位记录传感单元激活状态（1/0），1代表检测到黑线，0代表检测到白色，0位记录着所有激活单元的个数
+参数：
+// 运动参数计算
+#define WHEEL_DIAMETER 85                                // 轮胎直径(mm)
+#define TRACK_WIDTH 128                                  // 轮距宽度(mm)
+#define MAX_RPM 282                                      // 电机最高转速
+#define MAX_SPEED (MAX_RPM * M_PI * WHEEL_DIAMETER / 60) // 最大线速度≈1253mm/s
+传感器宽度：
+// 循迹传感器参数
+#define SENSOR_NUM 8
+#define SENSOR_SPACING 14.57 // 102mm宽度分布间距：102/(8-1)
