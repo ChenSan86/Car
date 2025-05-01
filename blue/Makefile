@@ -1,4 +1,4 @@
-TARGET=test2
+TARGET=bluetest2
 
 ifeq (,$(TOOLCHAIN_PREFIX))
 $(error TOOLCHAIN_PREFIX is not set)
