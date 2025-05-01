@@ -2,13 +2,13 @@
 #include <unistd.h>
 
 #include <wiringx.h>
-
+// scp -O bluetest root@192.168.42.1:/root/
 int main()
 {
     // Duo/Duo256M: LED = 25
     // DuoS:        LED =  0
     int DUO_LED = 25;
-    int counter = 5;
+    int counter = 2;
 
     // Duo:     milkv_duo
     // Duo256M: milkv_duo256m

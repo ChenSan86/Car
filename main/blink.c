@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "blink.h"
 void blink(){
-    int counter = 5;
+    int counter = 2;
     int LED = 25;
     if (wiringXSetup("milkv_duo", NULL) == -1)
     {

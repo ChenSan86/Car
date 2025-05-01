@@ -11,8 +11,6 @@ int fd;
 /*串口长度变量*/
 int g_num = 0;
 int g_packnum = 0;
-
-
 /*串口数据设置*/
 char InputString[512] = {0}; // 用来储存接收到的内容
 int NewLineReceived = 0;     // 前一次数据结束标志
