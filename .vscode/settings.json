@@ -1,0 +1,8 @@
+{
+    "python.pythonPath": "/opt/homebrew/bin/python3",
+    "files.associations": {
+        "bmp280.h": "c",
+        "shin.h": "c",
+        "global.h": "c"
+    }
+}

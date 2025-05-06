@@ -2,17 +2,17 @@
 #include <unistd.h>
 #include <wiringx.h>
 
-static int PWM_PIN = 4; // PWM5@GP4
+static int PWM_PIN = 6; // PWM5@GP4
 // 左转500000
 // 右转3000000
 // 中间1500000
 
-void turnLeft(int delay_ms){
-    wiringXPWMSetDuty(PWM_PIN, 500000);
-    printf("Duty: %ld ns\n", 500000);
+void turnRight(int delay_ms){
+    wiringXPWMSetDuty(PWM_PIN, 50000);
+    printf("Duty: %ld ns\n", 10000);
     delayMicroseconds(delay_ms); // 转为微秒
 }
-void turnRight(int delay_ms){
+void turnLeft(int delay_ms){
     wiringXPWMSetDuty(PWM_PIN, 3000000);
     printf("Duty: %ld ns\n", 3000000);
     delayMicroseconds(delay_ms); // 转为微秒
@@ -28,6 +28,12 @@ void moveServo(long duty, int delay_ms)
     wiringXPWMSetDuty(PWM_PIN, duty);
     printf("Duty: %ld ns\n", duty);
     delayMicroseconds(delay_ms * 1000); // 转为微秒
+}
+//0 - 180度
+//500000 3000000 1500000
+void turn(int angle){
+    int duty = (3000000 - angle * 16666);
+    moveServo(duty, 1000);
 }
 
 int main()
@@ -54,5 +60,20 @@ int main()
     // 中间
     center(500000); // 中间，停 1 秒
 
+    turn(30); // 转180度
+    delayMicroseconds(1000000); // 1s
+    turn(60); // 转90度
+    delayMicroseconds(1000000); // 1s
+    turn(90); // 转0度
+    delayMicroseconds(1000000); // 1s
+    turn(120); // 转-90度
+    delayMicroseconds(1000000); // 1s
+    turn(150); // 转-180度
+    delayMicroseconds(1000000); // 1s
+    turn(180); // 转-180度
+    delayMicroseconds(1000000); // 1s
+
+    center(500000); // 中间，停 1 秒
+    wiringXGC();
     return 0;
 }

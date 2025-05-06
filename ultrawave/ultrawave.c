@@ -27,19 +27,14 @@ int main()
 
     while (1)
     {
-        // 发出 10us 的高电平脉冲
         digitalWrite(TRIG, 0);
         usleep(2);
         digitalWrite(TRIG, 1);
         usleep(10);
         digitalWrite(TRIG, 0);
-
-        // 等待 Echo 变高
         while (digitalRead(ECHO) == 0)
             ;
         long start = getMicros();
-
-        // 等待 Echo 变低
         while (digitalRead(ECHO) == 1)
             ;
         long end = getMicros();

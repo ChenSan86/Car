@@ -6,7 +6,7 @@
 
 #define Kp 1.5
 #define Ki 0
-#define Kd 5
+#define Kd 1
 
 float er[8] = {3.5, 1.2, 0.7, 0.4, -0.4, -0.7, -1.2, -3.5};
 
