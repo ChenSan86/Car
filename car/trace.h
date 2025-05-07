@@ -3,4 +3,5 @@
 
 void getTrace(int *s);
 void initSensor();
+char *getTraceData();
 #endif

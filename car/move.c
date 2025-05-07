@@ -96,3 +96,17 @@ void whistle(){
     sleep(1);
     digitalWrite(WHISTLE, HIGH);
 }
+void Move_left_angle(int angle) // 左转
+{
+    Move(-1, 1);
+    delay(angle * 550 / 90);
+    Move(0, 0);
+    delayMicorSeconds(100);
+}
+void Move_right_angle(int angle) // 左转
+{
+    Move(1, -1);
+    delay(angle * 550 / 90);
+    Move(0, 0);
+    delayMicorSeconds(100);
+}

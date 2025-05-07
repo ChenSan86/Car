@@ -115,8 +115,7 @@ char* get_bmp280_data(){
     int32_t pressure = bmp280_convert_pressure(raw_pressure, raw_temperature, &params);
     printf("Temp. = %.2f C\n", temperature / 100.f);
     printf("Pressure = %.3f kPa\n", pressure / 1000.f);
-    //怎么写
     //把温度和气压转换成字符串
-    sprintf(data, "Temp. = %.2f C\nPressure = %.3f kPa\n", temperature / 100.f, pressure / 1000.f);
+    sprintf(data, "TEMO%.2fC,PRESSURE%.3fkPa\n", temperature / 100.f, pressure / 1000.f);
     return data;
 }

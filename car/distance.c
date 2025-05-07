@@ -45,7 +45,7 @@ int initDistance(){
     data = (char *)malloc(50);
     return 0;
 };
-char* getDistance(){
+float getDistance(){
     digitalWrite(TRIG, LOW);
     usleep(2);
     digitalWrite(TRIG, HIGH);
@@ -57,12 +57,15 @@ char* getDistance(){
     long end = getMicros();
     long duration = end - start;
     float distance = duration / 58.0;
-    sprintf(data,"Distance: %.2f cm\n", distance);
-    return data;
+    return distance;
 }
 int getR(){
     return digitalRead(RED_R);
 }
 int getL(){
     return digitalRead(RED_L);
+}
+char* getRL(){
+    sprintf(data, ":L%dR%d", getR(), getL());
+    return data;
 }

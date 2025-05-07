@@ -1,4 +1,4 @@
-scp -O tcp root@192.168.42.1:/root/
+scp -O tcs34725_i2c root@192.168.42.1:/root/
 首先控制函数都包含在move.h文件中
 核心函数有motor_run（long left，long right）
 这个函数会接收两个long值，分别代表左右轮的速度具体意义为每个电机最大速度的百分比（例如填88，电机就会转到最大速度的88%，填0就会静止，填负数会反转）
@@ -13,3 +13,14 @@ getTrace() 这个函数会修改头文件中定义的数组trace，trace数组�
 // 循迹传感器参数
 #define SENSOR_NUM 8
 #define SENSOR_SPACING 14.57 // 102mm宽度分布间距：102/(8-1)
+
+duo-pinmux -w GP4/UART2_TX
+duo-pinmux -w GP5/UART2_RX
+duo-pinmux -w GP6/IIC3_SDA
+duo-pinmux -w GP7/IIC3_SCL
+duo-pinmux -w GP8/GP8
+duo-pinmux -w GP9/PWM_4
+duo-pinmux -w GP12/PWM_4
+duo-pinmux -w GP13/PWM_5
+
+

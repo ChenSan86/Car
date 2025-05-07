@@ -9,7 +9,7 @@
 //RGB传感器
 #define I2C_RGB "/dev/i2c-3"
 //舵机
-#define PWM_TURN 9
+#define PWM_SREVO 9
 //BMP280
 #define I2C_BMP280 "/dev/i2c-1"
 //L298N

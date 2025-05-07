@@ -1,6 +1,7 @@
 #include "shin.h"
 #include "trace.h"
 int fdsensor = -1;
+char *data;
 void initSensor()
 {
 
@@ -29,4 +30,10 @@ void getTrace(int *s)
     s[5] = (data >> 2) & 0x01;
     s[6] = (data >> 1) & 0x01;
     s[7] = (data >> 0) & 0x01;
+}
+char *getTraceData(){
+    int s[8];
+    getTrace(s);
+    sprintf(data, "%d%d%d%d%d%d%d%d", s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
+    return data;
 }

@@ -11,4 +11,7 @@ void right();
 void rotationR();
 void rotationL();
 void whistle();
+void Move_left_angle(int angle); // 左转
+void Move_right_angle(int angle); // 右转
+
 #endif

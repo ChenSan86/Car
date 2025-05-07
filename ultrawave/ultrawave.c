@@ -3,9 +3,8 @@
 #include <sys/time.h>
 #include <wiringx.h>
 
-
-#define TRIG 6 // 触发引脚（输出）
-#define ECHO 7 // 回响引脚（输入）
+#define TRIG 21
+#define ECHO 20
 
 // 获取当前时间（微秒）
 long getMicros()
