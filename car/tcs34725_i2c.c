@@ -189,4 +189,6 @@ int init_tcs34725(){
 }
 char* get_tcs34725_data(){
     get_tcs34725_rgbc(&r, &g, &b, &l);
+    sprintf(ReturnTemp,"R:%d,G:%d,B:%d,%d",r,g,b,l);
+    return ReturnTemp;
 }

@@ -10,32 +10,22 @@ long getMicroseconds()
 int initDistance(){
     if (wiringXValidGPIO(TRIG) != 0)
     {
-        printf("Invalid GPIO %d\n", EN1);
+        printf("Invalid GPIO %d\n", TRIG);
         return -1;
     }
     if (wiringXValidGPIO(ECHO) != 0)
     {
-        printf("Invalid GPIO %d\n", EN1);
-        return -1;
-    }
-    if (wiringXValidGPIO(EN1) != 0)
-    {
-        printf("Invalid GPIO %d\n", EN1);
-        return -1;
-    }
-    if (wiringXValidGPIO(EN1) != 0)
-    {
-        printf("Invalid GPIO %d\n", EN1);
+        printf("Invalid GPIO %d\n", ECHO);
         return -1;
     }
     if (wiringXValidGPIO(RED_L) != 0)
     {
-        printf("Invalid GPIO %d\n", EN1);
+        printf("Invalid GPIO %d\n", RED_L);
         return -1;
     }
     if (wiringXValidGPIO(RED_R) != 0)
     {
-        printf("Invalid GPIO %d\n", EN1);
+        printf("Invalid GPIO %d\n", RED_R);
         return -1;
     }
     pinMode(TRIG, PINMODE_OUTPUT);
@@ -54,7 +44,7 @@ float getDistance(){
     while (digitalRead(ECHO) == 0);
     long start = getMicros();
     while (digitalRead(ECHO) == 1);
-    long end = getMicros();
+    long end = getMicroseconds();
     long duration = end - start;
     float distance = duration / 58.0;
     return distance;

@@ -20,7 +20,7 @@ int initTCP()
     if (fd_tcp < 0)
     {
         perror("串口打开失败");
-        return 1;
+        return -1;
     }
     printf("串口打开成功，开始接收数据...\n");
     wiringXSerialFlush(fd_tcp);

@@ -117,7 +117,6 @@ int StringFind(const char *pSrc, const char *pDst, int v_iStartPos)
 void processCommand()
 {
     if (NewLineReceived)
-
     {
         if (StringFind((const char *)InputString, "MODE", 0) > 0)
         {

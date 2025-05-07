@@ -27,9 +27,9 @@ rgb灯信号：
 【接收到指令】$0,0,1,0,0,0,0,0,0# 鸣笛
 
 模式信号：
-【接收到指令】$4WD,MODE21# 巡线
-【接收到指令】$4WD,MODE31# 避障
-【接收到指令】$4WD,MODE41# 七彩灯
-【接收到指令】$4WD,MODE51# 寻光
-【接收到指令】$4WD,MODE61# 跟随
+【接收到指令】$4WD,MODE21# 巡线 control
+【接收到指令】$4WD,MODE31# 避障  avoid
+【接收到指令】$4WD,MODE41# 七彩灯 face
+【接收到指令】$4WD,MODE51# 寻光 greenred
+【接收到指令】$4WD,MODE61# 跟随  follow
 

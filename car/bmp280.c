@@ -104,10 +104,10 @@ int init_bmp280(){
         printf("I2C Setup failed: %i\n", fd_bmp280);
         return -1;
     }
-    bmp280_init(fd_bmp280);
-    struct bmp280_calib_param params;
+    bmp280_init(fd_bmp280);  
     bmp280_get_calib_params(fd_bmp280, &params);
     usleep(250000);
+    return 0;
 }
 char* get_bmp280_data(){
     bmp280_read_raw(fd_bmp280, &raw_temperature, &raw_pressure);

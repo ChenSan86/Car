@@ -5,6 +5,13 @@
 #define left_car '3'  // 按键左
 #define right_car '4' // 按键右
 #define stop_car '0'  // 按键停
+
+int if_control = 0;
+int if_avoid = 0;
+int if_follow = 0;
+int if_face = 0;
+int if_greenred = 0;
+
 int fd_bluetooth;
 int init_blue();
 int initCar(){
@@ -76,10 +83,20 @@ int StringFind(const char *pSrc, const char *pDst, int v_iStartPos)
     }
     return -1;
 }
-void serial_data_parse()
+void itoa(int i, char *string)
 {
-    // 解析上位机发来的舵机云台的控制指令并执行舵机旋转
-    // 如:$4WD,PTZ180# 舵机转动到180度
+    sprintf(string, "%d", i);
+    return;
+}
+//=============================control====================================
+void control(){
+    while(if_control){
+        serialEvent(fd_bluetooth);
+        serial_data_parse_control();
+    }
+}
+
+void serial_data_parse_control(){
     if (StringFind((const char *)InputString, (const char *)"PTZ", 0) > 0)
     {
         int m_kp, i, ii;
@@ -91,50 +108,12 @@ void serial_data_parse()
             char m_skp[5] = {0};
             memcpy(m_skp, InputString + i + 3, ii - i - 3);
             m_kp = atoi(m_skp); // 将找到的字符串变成整型
-            turn(m_kp); // 转动到指定角度m_kp
+            turn(m_kp);         // 转动到指定角度m_kp
             NewLineReceived = 0;
             memset(InputString, 0x00, sizeof(InputString));
             return;
         }
     }
-
-    // 解析上位机发来的七彩探照灯指令并点亮相应的颜色
-    // 如:$4WD,CLR255,CLG0,CLB0# 七彩灯亮红色
-    // if (StringFind((const char *)InputString, (const char *)"CLR", 0) > 0)
-    // {
-    //     int m_kp, i, ii, red, green, blue;
-    //     char m_skp[5] = {0};
-    //     i = StringFind((const char *)InputString, (const char *)"CLR", 0);
-    //     ii = StringFind((const char *)InputString, (const char *)",", i);
-    //     if (ii > i)
-    //     {
-    //         memcpy(m_skp, InputString + i + 3, ii - i - 3);
-    //         m_kp = atoi(m_skp);
-    //         red = m_kp;
-    //     }
-    //     i = StringFind((const char *)InputString, (const char *)"CLG", 0);
-    //     ii = StringFind((const char *)InputString, (const char *)",", i);
-    //     if (ii > i)
-    //     {
-    //         memcpy(m_skp, InputString + i + 3, ii - i - 3);
-    //         m_kp = atoi(m_skp);
-    //         green = m_kp;
-    //     }
-    //     i = StringFind((const char *)InputString, (const char *)"CLB", 0);
-    //     ii = StringFind((const char *)InputString, (const char *)"#", i);
-    //     if (ii > i)
-    //     {
-    //         memcpy(m_skp, InputString + i + 3, ii - i - 3);
-    //         m_kp = atoi(m_skp);
-    //         blue = m_kp;
-    //         color_led_pwm(red, green, blue); // 点亮相应颜色的灯
-    //         NewLineReceived = 0;
-    //         memset(InputString, 0x00, sizeof(InputString));
-    //         return;
-    //     }
-    // }
-
-    // 解析上位机发来的通用协议指令,并执行相应的动作
     // 如:$1,0,0,0,0,0,0,0,0,0#    小车前进
     if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
         StringFind((const char *)InputString, (const char *)"#", 0) > 0)
@@ -157,7 +136,6 @@ void serial_data_parse()
         {
             whistle();
         }
-
 
         // 舵机左旋右旋判断
         if (InputString[9] == '1') // 舵机旋转到180度
@@ -188,7 +166,8 @@ void serial_data_parse()
         // 灭火判断
         if (InputString[15] == '1') // 灭火
         {
-            //TODO: 灭火
+            // TODO: 灭火
+            if_control = 0;
         }
 
         // 舵机归为判断
@@ -256,12 +235,212 @@ void serial_data_parse()
         }
     }
 }
-void itoa(int i, char *string)
+//=============================avoid====================================
+void avoid(){
+    while(if_avoid){
+        serialEvent(fd_bluetooth);
+        serial_data_parse_avoid();
+    }
+}
+void serial_data_parse_avoid(){
+    
+}
+//=============================follow====================================
+void serial_data_parse_follow(){
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            // TODO: 灭火
+            exit(0);
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
+void follow(){
+    
+}
+// 跟踪控制参数
+const float targetDistance = 30.0; // 目标跟随距离(cm)
+const float baseSpeed = 0.5;       // 基础跟随速度(0-1)
+const float turnGain = 0.3;        // 转向灵敏度(0-1)
+const float maxDistance = 100.0;   // 最大有效距离(cm)
+const float minDistance = 15.0;    // 最小安全距离(cm)
+
+// 状态变量
+float lastLeftIR = 0;
+float lastRightIR = 0;
+
+// 智能跟踪主函数
+void smartTracking()
 {
-    sprintf(string, "%d", i);
-    return;
+    // 1. 获取当前传感器数据
+    float distance = getDistance(); // 超声波距离
+    int leftIR = getL();            // 左侧红外(0/1)
+    int rightIR = getR();           // 右侧红外(0/1)
+
+    // 2. 更新红外检测状态(带滤波)
+    lastLeftIR = updateIRSmoothing(lastLeftIR, leftIR);
+    lastRightIR = updateIRSmoothing(lastRightIR, rightIR);
+
+    // 3. 安全边界检查
+    if (distance < minDistance)
+    {
+        move(0, 0); // 紧急停止
+        return;
+    }
+
+    if (distance > maxDistance)
+    {
+        move(0, 0); // 超出范围停止
+        return;
+    }
+
+    // 4. 计算控制输出
+    float leftSpeed, rightSpeed;
+    calculateMovement(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
+
+    // 5. 执行移动
+    move(leftSpeed, rightSpeed);
+
+    // 6. 调试输出(可选)
+    debugOutput(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
 }
 
+// 红外传感器状态更新(带滤波)
+float updateIRSmoothing(float lastValue, int currentReading)
+{
+    // 当前检测到则设为1，否则缓慢衰减
+    return currentReading ? 1.0 : max(0.0, lastValue - 0.1);
+}
+
+// 计算运动控制量
+void calculateMovement(float distance, float leftIR, float rightIR,
+                       float leftSpeed, float rightSpeed)
+{
+    // 计算距离误差 (归一化到[-1,1])
+    float distanceError = (distance - targetDistance) / targetDistance;
+
+    // 计算方向误差 (基于两侧红外检测)
+    float directionError = rightIR - leftIR; // 正值表示目标偏右
+
+    // 计算基础速度 (距离越接近目标速度越小)
+    float speed = constrain(baseSpeed * (1.0 - abs(distanceError)), 0.2, baseSpeed);
+
+    // 计算转向调整
+    float turn = turnGain * directionError;
+
+    // 基础运动控制
+    leftSpeed = constrain(speed + turn, -1.0, 1.0);
+    rightSpeed = constrain(speed - turn, -1.0, 1.0);
+
+    // 增强转向逻辑 - 当目标明显偏向一侧时
+    if (leftIR > 0.8 && rightIR < 0.2)
+    {
+        leftSpeed = -0.3; // 向左急转
+        rightSpeed = 0.5;
+    }
+    else if (rightIR > 0.8 && leftIR < 0.2)
+    {
+        leftSpeed = 0.5; // 向右急转
+        rightSpeed = -0.3;
+    }
+}
+
+// 调试信息输出(可选)
+void debugOutput(float dist, float lIR, float rIR, float lSpeed, float rSpeed)
+{
+
+}
+
+
+//=============================face====================================
+void serial_data_parse_face(){
+    
+}
+void faceDetect(){
+    
+}
+//=============================greenred====================================
+void serial_data_parse_greenred(){
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            // TODO: 灭火
+            exit(0);
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
+void greenredDetect(){
+    
+    
+}
+//=============================main====================================
+
+void serial_data_parse()
+{
+    if (StringFind((const char *)InputString, "MODE", 0) > 0)
+    {
+        int i = StringFind(InputString, "MODE", 0);
+        int ii = StringFind(InputString, "#", i);
+        if (ii > i && ii - i >= 6) // 至少包含 MODE+2位编号
+        {
+            char modeStr[4] = {0};
+            strncpy(modeStr, &InputString[i + 4], 2); // 从 MODE 后面截取2位数字
+            int mode = atoi(modeStr);                 // 转换为整数
+
+            printf("【解析出模式编号】：%d\n", mode);
+
+            switch (mode)
+            {
+            case 21:
+                printf("→ 启动巡线模式\n");
+                break;
+            case 31:
+                printf("→ 启动避障模式\n");
+                break;
+            case 41:
+                printf("→ 启动七彩灯模式\n");
+                break;
+            case 51:
+                printf("→ 启动寻光模式\n");
+                break;
+            case 61:
+                printf("→ 启动跟随模式\n");
+                break;
+            default:
+                printf("→ 未知模式：%d\n", mode);
+                break;
+            }
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        //miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            // TODO: 灭火
+            exit(0);
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
 void serial_data_postback()
 {
     //$4WD,CSB120,PV8.3,GS214,LF1011,HW11,GM11#

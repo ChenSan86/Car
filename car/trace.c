@@ -1,7 +1,7 @@
 #include "shin.h"
 #include "trace.h"
 int fdsensor = -1;
-char *data;
+static char data[8];
 void initSensor()
 {
 
@@ -13,23 +13,24 @@ void initSensor()
     {
         printf("I2C setup failed!\n");
     }
+    
 }
 void getTrace(int *s)
 {
-    int data = wiringXI2CReadReg8(fdsensor, 0x30); // 从寄存器 0x30 读1字节
-    if (data < 0)
+    int a = wiringXI2CReadReg8(fdsensor, 0x30); // 从寄存器 0x30 读1字节
+    if (a < 0)
     {
         printf("Read failed!\n");
         return;
     }
-    s[0] = (data >> 7) & 0x01;
-    s[1] = (data >> 6) & 0x01;
-    s[2] = (data >> 5) & 0x01;
-    s[3] = (data >> 4) & 0x01;
-    s[4] = (data >> 3) & 0x01;
-    s[5] = (data >> 2) & 0x01;
-    s[6] = (data >> 1) & 0x01;
-    s[7] = (data >> 0) & 0x01;
+    s[0] = (a >> 7) & 0x01;
+    s[1] = (a >> 6) & 0x01;
+    s[2] = (a >> 5) & 0x01;
+    s[3] = (a >> 4) & 0x01;
+    s[4] = (a >> 3) & 0x01;
+    s[5] = (a >> 2) & 0x01;
+    s[6] = (a >> 1) & 0x01;
+    s[7] = (a >> 0) & 0x01;
 }
 char *getTraceData(){
     int s[8];
