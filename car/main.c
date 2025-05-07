@@ -6,6 +6,19 @@
 #define right_car '4' // 按键右
 #define stop_car '0'  // 按键停
 
+void serialEvent();
+void serial_data_parse_control();
+void serial_data_parse_face();
+void serial_data_parse_avoid();
+void serial_data_parse_follow();
+void serial_data_parse_greenred();
+void control();
+void avoid();
+void follow();
+void face();
+void greenred();
+
+
 int if_control = 0;
 int if_avoid = 0;
 int if_follow = 0;
@@ -146,22 +159,7 @@ void serial_data_parse_control(){
         {
             turnLeft();
         }
-        if (InputString[13] == '1') // 七彩灯亮白色
-        {
-            color_led_pwm(255, 255, 255);
-        }
-        if (InputString[13] == '2') // 七彩灯亮红色
-        {
-            color_led_pwm(255, 0, 0);
-        }
-        if (InputString[13] == '3') // 七彩灯亮绿灯
-        {
-            color_led_pwm(0, 255, 0);
-        }
-        if (InputString[13] == '4') // 七彩灯亮蓝灯
-        {
-            color_led_pwm(0, 0, 255);
-        }
+        
 
         // 灭火判断
         if (InputString[15] == '1') // 灭火
@@ -212,7 +210,7 @@ void serial_data_parse_control(){
             brake();
             break;
         case enRUN:
-            run();
+            forward();
             break;
         case enLEFT:
             left();
@@ -224,10 +222,10 @@ void serial_data_parse_control(){
             back();
             break;
         case enTLEFT:
-            rotationL;
+            rotationL();
             break;
         case enTRIGHT:
-            rotationR;
+            rotationR();
             break;
         default:
             brake();
@@ -235,156 +233,156 @@ void serial_data_parse_control(){
         }
     }
 }
-//=============================avoid====================================
-void avoid(){
-    while(if_avoid){
-        serialEvent(fd_bluetooth);
-        serial_data_parse_avoid();
-    }
-}
-void serial_data_parse_avoid(){
+// //=============================avoid====================================
+// void avoid(){
+//     while(if_avoid){
+//         serialEvent(fd_bluetooth);
+//         serial_data_parse_avoid();
+//     }
+// }
+// void serial_data_parse_avoid(){
     
-}
-//=============================follow====================================
-void serial_data_parse_follow(){
-    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
-        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
-    {
-        // miehuo
-        if (InputString[15] == '1') // 灭火
-        {
-            // TODO: 灭火
-            exit(0);
-        }
-        NewLineReceived = 0;
-        memset(InputString, 0x00, sizeof(InputString));
-        return;
-    }
-}
-void follow(){
+// }
+// //=============================follow====================================
+// void serial_data_parse_follow(){
+//     if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+//         StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+//     {
+//         // miehuo
+//         if (InputString[15] == '1') // 灭火
+//         {
+//             // TODO: 灭火
+//             exit(0);
+//         }
+//         NewLineReceived = 0;
+//         memset(InputString, 0x00, sizeof(InputString));
+//         return;
+//     }
+// }
+// void follow(){
     
-}
-// 跟踪控制参数
-const float targetDistance = 30.0; // 目标跟随距离(cm)
-const float baseSpeed = 0.5;       // 基础跟随速度(0-1)
-const float turnGain = 0.3;        // 转向灵敏度(0-1)
-const float maxDistance = 100.0;   // 最大有效距离(cm)
-const float minDistance = 15.0;    // 最小安全距离(cm)
+// }
+// // 跟踪控制参数
+// const float targetDistance = 30.0; // 目标跟随距离(cm)
+// const float baseSpeed = 0.5;       // 基础跟随速度(0-1)
+// const float turnGain = 0.3;        // 转向灵敏度(0-1)
+// const float maxDistance = 100.0;   // 最大有效距离(cm)
+// const float minDistance = 15.0;    // 最小安全距离(cm)
 
-// 状态变量
-float lastLeftIR = 0;
-float lastRightIR = 0;
+// // 状态变量
+// float lastLeftIR = 0;
+// float lastRightIR = 0;
 
-// 智能跟踪主函数
-void smartTracking()
-{
-    // 1. 获取当前传感器数据
-    float distance = getDistance(); // 超声波距离
-    int leftIR = getL();            // 左侧红外(0/1)
-    int rightIR = getR();           // 右侧红外(0/1)
+// // 智能跟踪主函数
+// void smartTracking()
+// {
+//     // 1. 获取当前传感器数据
+//     float distance = getDistance(); // 超声波距离
+//     int leftIR = getL();            // 左侧红外(0/1)
+//     int rightIR = getR();           // 右侧红外(0/1)
 
-    // 2. 更新红外检测状态(带滤波)
-    lastLeftIR = updateIRSmoothing(lastLeftIR, leftIR);
-    lastRightIR = updateIRSmoothing(lastRightIR, rightIR);
+//     // 2. 更新红外检测状态(带滤波)
+//     lastLeftIR = updateIRSmoothing(lastLeftIR, leftIR);
+//     lastRightIR = updateIRSmoothing(lastRightIR, rightIR);
 
-    // 3. 安全边界检查
-    if (distance < minDistance)
-    {
-        move(0, 0); // 紧急停止
-        return;
-    }
+//     // 3. 安全边界检查
+//     if (distance < minDistance)
+//     {
+//         move(0, 0); // 紧急停止
+//         return;
+//     }
 
-    if (distance > maxDistance)
-    {
-        move(0, 0); // 超出范围停止
-        return;
-    }
+//     if (distance > maxDistance)
+//     {
+//         move(0, 0); // 超出范围停止
+//         return;
+//     }
 
-    // 4. 计算控制输出
-    float leftSpeed, rightSpeed;
-    calculateMovement(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
+//     // 4. 计算控制输出
+//     float leftSpeed, rightSpeed;
+//     calculateMovement(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
 
-    // 5. 执行移动
-    move(leftSpeed, rightSpeed);
+//     // 5. 执行移动
+//     move(leftSpeed, rightSpeed);
 
-    // 6. 调试输出(可选)
-    debugOutput(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
-}
+//     // 6. 调试输出(可选)
+//     debugOutput(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
+// }
 
-// 红外传感器状态更新(带滤波)
-float updateIRSmoothing(float lastValue, int currentReading)
-{
-    // 当前检测到则设为1，否则缓慢衰减
-    return currentReading ? 1.0 : max(0.0, lastValue - 0.1);
-}
+// // 红外传感器状态更新(带滤波)
+// float updateIRSmoothing(float lastValue, int currentReading)
+// {
+//     // 当前检测到则设为1，否则缓慢衰减
+//     return currentReading ? 1.0 : max(0.0, lastValue - 0.1);
+// }
 
-// 计算运动控制量
-void calculateMovement(float distance, float leftIR, float rightIR,
-                       float leftSpeed, float rightSpeed)
-{
-    // 计算距离误差 (归一化到[-1,1])
-    float distanceError = (distance - targetDistance) / targetDistance;
+// // 计算运动控制量
+// void calculateMovement(float distance, float leftIR, float rightIR,
+//                        float leftSpeed, float rightSpeed)
+// {
+//     // 计算距离误差 (归一化到[-1,1])
+//     float distanceError = (distance - targetDistance) / targetDistance;
 
-    // 计算方向误差 (基于两侧红外检测)
-    float directionError = rightIR - leftIR; // 正值表示目标偏右
+//     // 计算方向误差 (基于两侧红外检测)
+//     float directionError = rightIR - leftIR; // 正值表示目标偏右
 
-    // 计算基础速度 (距离越接近目标速度越小)
-    float speed = constrain(baseSpeed * (1.0 - abs(distanceError)), 0.2, baseSpeed);
+//     // 计算基础速度 (距离越接近目标速度越小)
+//     float speed = constrain(baseSpeed * (1.0 - abs(distanceError)), 0.2, baseSpeed);
 
-    // 计算转向调整
-    float turn = turnGain * directionError;
+//     // 计算转向调整
+//     float turn = turnGain * directionError;
 
-    // 基础运动控制
-    leftSpeed = constrain(speed + turn, -1.0, 1.0);
-    rightSpeed = constrain(speed - turn, -1.0, 1.0);
+//     // 基础运动控制
+//     leftSpeed = constrain(speed + turn, -1.0, 1.0);
+//     rightSpeed = constrain(speed - turn, -1.0, 1.0);
 
-    // 增强转向逻辑 - 当目标明显偏向一侧时
-    if (leftIR > 0.8 && rightIR < 0.2)
-    {
-        leftSpeed = -0.3; // 向左急转
-        rightSpeed = 0.5;
-    }
-    else if (rightIR > 0.8 && leftIR < 0.2)
-    {
-        leftSpeed = 0.5; // 向右急转
-        rightSpeed = -0.3;
-    }
-}
+//     // 增强转向逻辑 - 当目标明显偏向一侧时
+//     if (leftIR > 0.8 && rightIR < 0.2)
+//     {
+//         leftSpeed = -0.3; // 向左急转
+//         rightSpeed = 0.5;
+//     }
+//     else if (rightIR > 0.8 && leftIR < 0.2)
+//     {
+//         leftSpeed = 0.5; // 向右急转
+//         rightSpeed = -0.3;
+//     }
+// }
 
-// 调试信息输出(可选)
-void debugOutput(float dist, float lIR, float rIR, float lSpeed, float rSpeed)
-{
+// // 调试信息输出(可选)
+// void debugOutput(float dist, float lIR, float rIR, float lSpeed, float rSpeed)
+// {
 
-}
+// }
 
 
-//=============================face====================================
-void serial_data_parse_face(){
+// //=============================face====================================
+// void serial_data_parse_face(){
     
-}
-void faceDetect(){
+// }
+// void faceDetect(){
     
-}
-//=============================greenred====================================
-void serial_data_parse_greenred(){
-    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
-        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
-    {
-        // miehuo
-        if (InputString[15] == '1') // 灭火
-        {
-            // TODO: 灭火
-            exit(0);
-        }
-        NewLineReceived = 0;
-        memset(InputString, 0x00, sizeof(InputString));
-        return;
-    }
-}
-void greenredDetect(){
+// }
+// //=============================greenred====================================
+// void serial_data_parse_greenred(){
+//     if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+//         StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+//     {
+//         // miehuo
+//         if (InputString[15] == '1') // 灭火
+//         {
+//             // TODO: 灭火
+//             exit(0);
+//         }
+//         NewLineReceived = 0;
+//         memset(InputString, 0x00, sizeof(InputString));
+//         return;
+//     }
+// }
+// void greenredDetect(){
     
     
-}
+// }
 //=============================main====================================
 
 void serial_data_parse()
@@ -481,7 +479,7 @@ void serialEvent()
     char uartvalue = 0;
     while (1)
     {
-        UartReturnCount = serialDataAvail();
+        UartReturnCount = wiringXSerialDataAvail(fd_bluetooth);
         if (UartReturnCount == 0)
         {
             break;
@@ -490,7 +488,7 @@ void serialEvent()
         {
             while (UartReturnCount--)
             {
-                uartvalue = (char)serialGetchar(fd_bluetooth);
+                uartvalue = (char)wiringXSerialGetChar(fd_bluetooth);
                 if (uartvalue == '$')
                 {
                     StartBit = 1;
@@ -520,93 +518,16 @@ void serialEvent()
     }
 }
 //TEST
-void bmp280_test(){
-    int counter = 10;
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    init_bmp280();
-    printf("bmp280 test\n");
-    while(counter --){
-        printf("bmp280 data:%s\n", get_bmp280_data());
-        delayMicroseconds(1000000);
-    }
-}
-void tcs34725_test(){
-    int counter = 10;
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    init_tcs34725();
-    printf("tcs34725 test\n");
-    while(counter --){
-        printf("tcs34725 data:%s\n", get_tcs34725_data());
-        delayMicroseconds(1000000);
-    }
-}
-void distance_test(){
-    int counter = 10;
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    initDistance();
-    printf("distance test\n");
-    while(counter --){
-        printf("distance data:%d\n", getDistance());
-        delayMicroseconds(1000000);
-    }
-}
-void trace_test(){
-    int counter = 10;
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    initSensor();
-    printf("trace test\n");
-    while(counter --){
-        printf("trace data:%s\n", getTraceData());
-        delayMicroseconds(1000000);
-    }
-}
-void infrared_test(){
-    int counter = 10;
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    initSensor();
-    printf("infrared test\n");
-    while(counter --){
-        printf("infrared data:%s\n", getRL());
-        delayMicroseconds(1000000);
-    }
-}
-void servo_test(){
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    initServo();
-    printf("servo test\n");
-    center();
-    delayMicroseconds(1000000);
-    turnRight();
-    delayMicroseconds(1000000);
-    turnLeft();
-    delayMicroseconds(1000000);
-    center();
-    delayMicroseconds(1000000);
-}
+
+
+
 //TEST
 int main(){
+    if (wiringXSetup("milkv_duo", NULL) == -1)
+    {
+        wiringXGC();
+        return -1;
+    }
+    distance_test();
+    return 0;
 }

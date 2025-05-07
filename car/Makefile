@@ -1,4 +1,4 @@
-TARGET=main_trace
+TARGET=main
 
 ifeq (,$(TOOLCHAIN_PREFIX))
 $(error TOOLCHAIN_PREFIX is not set)

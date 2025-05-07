@@ -2,7 +2,7 @@
 #include "tcs34725_i2c.h"
 
 int fd_rgb;
-char *ReturnTemp;
+char *ReturnTemp_tcs;
 
 static bool tcs34725_state = false;
 
@@ -165,14 +165,16 @@ uint8_t get_tcs34725_rgbc(uint16_t *colour_r, uint16_t *colour_g, uint16_t *colo
     return err;
 }
 uint16_t r, g, b, l;
-int init_tcs34725(){
+uint8_t tcs34725_type;
+int init_tcs34725()
+{
     if ((fd_rgb = wiringXI2CSetup(I2C_RGB, TCS34725_ADDR)) < 0)
     {
         printf("I2C Setup failed: %i\n", fd_rgb);
         return -1;
     }
 
-    uint8_t tcs34725_type = get_tcs34725_type();
+    tcs34725_type = get_tcs34725_type();
     printf("device type is : %x \n", tcs34725_type);
     if (!((tcs34725_type == 0x44) || (tcs34725_type == 0x4D)))
     {
@@ -183,12 +185,12 @@ int init_tcs34725(){
     set_tcs34725_integration_time(TCS34725_INTEGRATIONTIME_50MS);
     set_tcs34725_gain(TCS34725_GAIN_4X);
     tcs34725_start(0);
-    ReturnTemp = (char*)malloc(50);
+    ReturnTemp_tcs = (char*)malloc(50);
     delayMicroseconds(100000);
     return 0;
 }
 char* get_tcs34725_data(){
     get_tcs34725_rgbc(&r, &g, &b, &l);
-    sprintf(ReturnTemp,"R:%d,G:%d,B:%d,%d",r,g,b,l);
-    return ReturnTemp;
+    sprintf(ReturnTemp_tcs,"R:%d,G:%d,B:%d,%d",r,g,b,l);
+    return ReturnTemp_tcs;
 }

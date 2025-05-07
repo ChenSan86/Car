@@ -3,9 +3,9 @@
 //循迹
 #define I2C_TRACE "/dev/i2c-0"
 //蓝牙
-#define UART_BLUETOOTH "/dev/ttyS4"
+#define UART_BLUETOOTH "/dev/ttyS1"
 //网络
-#define UART_NET "/dev/ttyS2"
+#define UART_NET "/dev/ttyS3"
 //RGB传感器
 #define I2C_RGB "/dev/i2c-3"
 //舵机
@@ -15,8 +15,8 @@
 //L298N
 #define PWM_1 12
 #define PWM_2 13
-#define EN1 14 // forward = 1
-#define EN2 15
+#define EN1 15 // forward = 1
+#define EN2 14
 #define EN3 16 // forward = 1
 #define EN4 17
 #define PERIOD 500000 // 500us

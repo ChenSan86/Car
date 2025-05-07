@@ -10,17 +10,21 @@ int initServo(){
 void turnRight()
 {
     wiringXPWMSetDuty(PWM_SREVO, 50000);
+    delayMicroseconds(1000000);
 }
 void turnLeft()
 {
     wiringXPWMSetDuty(PWM_SREVO, 3000000);
+    delayMicroseconds(1000000);
 }
 void center()
 {
     wiringXPWMSetDuty(PWM_SREVO, 1500000);
+    delayMicroseconds(1000000);
 }
 void turn(int angle)
 {
     int duty = (3000000 - angle * 16666);
     wiringXPWMSetDuty(PWM_SREVO, duty);
+    delayMicroseconds(1000000);
 }

@@ -14,13 +14,15 @@ getTrace() 这个函数会修改头文件中定义的数组trace，trace数组�
 #define SENSOR_NUM 8
 #define SENSOR_SPACING 14.57 // 102mm宽度分布间距：102/(8-1)
 
-duo-pinmux -w GP4/UART2_TX
-duo-pinmux -w GP5/UART2_RX
+
+
+duo-pinmux -w GP2/PWM_10
+duo-pinmux -w GP3/PWM_11
+duo-pinmux -w GP12/UART1_TX
+duo-pinmux -w GP13/UART1_RX
+duo-pinmux -w GP9/PWM_4
+duo-pinmux -w GP8/GP8
 duo-pinmux -w GP6/IIC3_SDA
 duo-pinmux -w GP7/IIC3_SCL
-duo-pinmux -w GP8/GP8
-duo-pinmux -w GP9/PWM_4
-duo-pinmux -w GP12/PWM_4
-duo-pinmux -w GP13/PWM_5
-
-
+duo-pinmux -w GP4/UART3_TX
+duo-pinmux -w GP5/UART3_RX

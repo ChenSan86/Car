@@ -31,4 +31,5 @@ void getTrace(int *s){
     s[5] = (data >> 2) & 0x01;
     s[6] = (data >> 1) & 0x01;
     s[7] = (data >> 0) & 0x01;
+    
 }

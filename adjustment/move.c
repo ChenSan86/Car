@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "move.h"
+#include "trace.h"
 #include <unistd.h>
 #include <wiringx.h>
 #include <math.h>
@@ -8,11 +9,6 @@ int speedr = 100, speedl = 100;
 void initMove()
 {
 
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return;
-    }
     wiringXPWMSetPeriod(PWM_1, PERIOD); // 500us
     wiringXPWMSetPolarity(PWM_1, 0);
     wiringXPWMEnable(PWM_1, 1);

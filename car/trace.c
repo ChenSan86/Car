@@ -4,16 +4,13 @@ int fdsensor = -1;
 static char data[8];
 void initSensor()
 {
-
     int i2c_addr = 0x12;                // I2C 设备地址
-
     // 设置 I2C 设备
     fdsensor = wiringXI2CSetup(I2C_TRACE, i2c_addr);
     if (fdsensor < 0)
     {
         printf("I2C setup failed!\n");
     }
-    
 }
 void getTrace(int *s)
 {

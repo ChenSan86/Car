@@ -27,10 +27,12 @@ int main()
     wiringXSerialFlush(fd);
     while (1)
     {
-        wiringXSerialPrintf(fd, "$4WD,CSB%d,PV8.3,GS214,LF1011,HW11,GM11#\n",counter);
-        delayMicroseconds(1000000);
-        puts(ReturnTemp);
-        counter++;
+        int data = wiringXSerialDataAvail(fd);
+        if (data > 0)
+        {
+            wiringXSerialGetChar(fd);
+            fflush(stdout);
+        }
     }
     wiringXSerialClose(fd);
     return 0;

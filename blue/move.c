@@ -7,7 +7,6 @@
 int speedr = 70, speedl = 70;
 void initMove()
 {
-
     if (wiringXSetup("milkv_duo", NULL) == -1)
     {
         wiringXGC();

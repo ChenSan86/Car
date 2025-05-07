@@ -41,6 +41,7 @@ extern "C"
 #define TCS34725_ENABLE_AEN (0x02)  // RGBC启用：写1激活 RGBC enable: write 1 to activate
 #define TCS34725_ENABLE_PON (0x01)  // 内部振荡器：写入1激活 Internal oscillator: activated by writing 1
 
+
     /* 集成时间配置参数 Integration time configuration parameters
      * 最大RGBC计数 Maximum RGBC count = (256 - cycles) × 1024
      * 集成时间 Integration time ≈ (256 - cycles) × 2.4ms */
@@ -69,7 +70,7 @@ extern "C"
         bool interrupt_start;
         tcs34725_integration_time_t integration_time;
         tcs34725_gain_t gain;
-    } tcs34725_config_t;
+    };
 
     uint8_t tcs34725_start(bool interrupt_start);
     uint8_t tcs34725_stop(void);
@@ -79,7 +80,8 @@ extern "C"
     uint8_t get_tcs34725_rgbc(uint16_t *colour_r, uint16_t *colour_g, uint16_t *colour_b, uint16_t *colour_c);
     tcs34725_integration_time_t get_tcs34725_integration_time(void);
     tcs34725_gain_t get_tcs34725_gain(void);
-
+    // tcs34725_i2c.h
+    extern struct tcs34725_config_t tcs34725_config;
     int init_tcs34725();
     char *get_tcs34725_data();
 #ifdef __cplusplus

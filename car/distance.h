@@ -5,6 +5,5 @@ int initDistance();
 float getDistance();
 int getR();
 int getL();
-long getMicroseconds();
 char *getRL();
 #endif
