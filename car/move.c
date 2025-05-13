@@ -1,6 +1,6 @@
 #include "shin.h"
 #include "move.h"
-int speedr = 100, speedl = 100;
+int speedr = 90, speedl = 90;
 int initMove()
 {
     wiringXPWMSetPeriod(PWM_1, PERIOD); // 500us

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小车传感器监控系统</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #4CAF50;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #555;
+            font-size: 1.2em;
+        }
+        .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #333;
+        }
+        .unit {
+            color: #777;
+            font-size: 0.9em;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 0.8em;
+            text-align: right;
+            margin-top: 10px;
+        }
+        .tracking-grid, .avoidance-grid {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        .sensor {
+            text-align: center;
+            padding: 5px;
+        }
+        .sensor.active {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+        }
+        .sensor.inactive {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .color-display {
+            width: 100%;
+            height: 50px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+        .connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .disconnected {
+            background-color: #f44336;
+            color: white;
+        }
+        .raw-data {
+            font-family: monospace;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>小车传感器监控系统 (AT指令版)</h1>
+        
+        <div id="connection-status" class="connection-status disconnected">
+            未连接
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2>温度</h2>
+                <div class="value" id="temperature">--</div>
+                <div class="unit">°C</div>
+                <div class="timestamp" id="timestamp">--</div>
+            </div>
+            
+            <div class="card">
+                <h2>压强</h2>
+                <div class="value" id="pressure">--</div>
+                <div class="unit">kPa</div>
+                <div class="timestamp" id="timestamp">--</div>
+            </div>
+            
+            <div class="card">
+                <h2>超声波测距</h2>
+                <div class="value" id="distance">--</div>
+                <div class="unit">cm</div>
+                <div class="timestamp" id="timestamp">--</div>
+            </div>
+            
+            <div class="card">
+                <h2>八路循迹状态</h2>
+                <div class="tracking-grid" id="tracking-sensors">
+                    <!-- 动态生成8个传感器状态 -->
+                </div>
+                <div class="timestamp" id="timestamp">--</div>
+            </div>
+            
+            <div class="card">
+                <h2>红外避障状态</h2>
+                <div class="avoidance-grid" id="avoidance-sensors">
+                    <!-- 动态生成2个避障传感器状态 -->
+                </div>
+                <div class="timestamp" id="timestamp">--</div>
+            </div>
+            
+            <div class="card">
+                <h2>颜色传感器</h2>
+                <div class="color-display" id="color-display" style="background-color: rgb(0, 0, 0)"></div>
+                <div>R: <span id="color-r">0</span></div>
+                <div>G: <span id="color-g">0</span></div>
+                <div>B: <span id="color-b">0</span></div>
+                <div class="timestamp" id="timestamp">--</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>原始AT指令数据</h2>
+            <div class="raw-data" id="raw-data">等待数据...</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        // 初始化8路循迹传感器显示
+        const trackingGrid = document.getElementById('tracking-sensors');
+        for (let i = 0; i < 8; i++) {
+            const sensor = document.createElement('div');
+            sensor.className = 'sensor inactive';
+            sensor.id = `track-${i}`;
+            sensor.textContent = `T${i}`;
+            trackingGrid.appendChild(sensor);
+        }
+        
+        // 初始化2路避障传感器显示
+        const avoidanceGrid = document.getElementById('avoidance-sensors');
+        for (let i = 0; i < 2; i++) {
+            const sensor = document.createElement('div');
+            sensor.className = 'sensor inactive';
+            sensor.id = `avoid-${i}`;
+            sensor.textContent = `A${i}`;
+            avoidanceGrid.appendChild(sensor);
+        }
+        
+        // 连接到WebSocket服务器
+        const socket = io('http://localhost:5000');
+        
+        // 连接状态处理
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            document.getElementById('connection-status').className = 'connection-status connected';
+            document.getElementById('connection-status').textContent = '已连接';
+        });
+        
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+            document.getElementById('connection-status').className = 'connection-status disconnected';
+            document.getElementById('connection-status').textContent = '未连接';
+        });
+        
+        // 接收传感器数据更新
+        socket.on('sensor_update', (data) => {
+            console.log('Received sensor data:', data);
+            updateDashboard(data);
+        });
+        
+        // 更新仪表板
+        function updateDashboard(data) {
+            // 基础传感器数据
+            document.getElementById('temperature').textContent = data.temperature.toFixed(1);
+            document.getElementById('pressure').textContent = data.pressure.toFixed(1);
+            document.getElementById('distance').textContent = data.distance.toFixed(1);
+            
+            // 8路循迹传感器
+            data.tracking.forEach((state, index) => {
+                const sensor = document.getElementById(`track-${index}`);
+                sensor.className = state ? 'sensor active' : 'sensor inactive';
+            });
+            
+            // 2路避障传感器
+            data.avoidance.forEach((state, index) => {
+                const sensor = document.getElementById(`avoid-${index}`);
+                sensor.className = state ? 'sensor active' : 'sensor inactive';
+            });
+            
+            // 颜色传感器
+            const color = data.color;
+            document.getElementById('color-r').textContent = color.r;
+            document.getElementById('color-g').textContent = color.g;
+            document.getElementById('color-b').textContent = color.b;
+            document.getElementById('color-display').style.backgroundColor = 
+                `rgb(${color.r}, ${color.g}, ${color.b})`;
+            
+            // 更新所有时间戳
+            const timestamps = document.querySelectorAll('.timestamp');
+            timestamps.forEach(el => {
+                el.textContent = data.timestamp;
+            });
+            
+            // 显示原始数据格式
+            document.getElementById('raw-data').textContent = 
+                `AT+SENSOR=TEMP:${data.temperature.toFixed(1)},PRESS:${data.pressure.toFixed(1)},` +
+                `TRACK:${data.tracking.join('')},AVOID:${data.avoidance.join('')},` +
+                `COLOR:${color.r}-${color.g}-${color.b},DIST:${data.distance.toFixed(1)}`;
+        }
+        
+        // 初始加载数据
+        fetch('http://localhost:8080/api/sensor-data')
+            .then(response => response.json())
+            .then(data => {
+                updateDashboard(data);
+            })
+            .catch(error => {
+                console.error('Error fetching initial data:', error);
+            });
+    </script>
+</body>
+</html>

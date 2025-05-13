@@ -1,11 +1,11 @@
 #include "blink.h"
 #include "move.h"
 #include "trace.h"
-#define Kp 1.5
+#define Kp 2
 #define Ki 0
-#define Kd 2
+#define Kd 1.5
 
-float er[8] = {3.4, 1.8, 0.8, 0.2, -0.2, -0.8, -1.8, -3.4};
+float er[8] = {3.4, 1.8, 1.0, 0.2, -0.2, -1.0, -1.8, -3.4};
 int sensorValues[8]={0};
 
 float calculateError(int *s)
@@ -25,7 +25,7 @@ void Auto_tracking_mode() // 自动循迹模式
     // PID variables
     float lastError = 0;
     float integral = 0;
-    speedl = 95, speedr = 95;
+    speedl = 90, speedr = 90;
     int presec = 0;
     int fx = 0;
     while (1)
@@ -42,7 +42,7 @@ void Auto_tracking_mode() // 自动循迹模式
                 if (error != -100)
                     break;
                 Move(fx, -fx);
-                delayMicroseconds(5000);
+                delayMicroseconds(1000);
             }
             continue;
         }
@@ -64,7 +64,7 @@ void Auto_tracking_mode() // 自动循迹模式
         if (rightSpeed < -1)
             rightSpeed = -1;
         Move(leftSpeed, rightSpeed);
-        delayMicroseconds(5000);
+        delayMicroseconds(1000);
         lastError = error;
     }
 }
@@ -78,11 +78,8 @@ int main(){
     initMove();
     initBlink();
     initSensor();
-    
     Move(0, 0);
-    blink(3);
-
+    // blink(2);
     Auto_tracking_mode();
-
     return 0;
 }

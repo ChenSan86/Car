@@ -2,6 +2,7 @@
 #define BMP280_H
 #include "shin.h"
 #define I2C_ADDR 0x77
+
 // hardware registers
 #define REG_CONFIG 0xF5
 #define REG_CTRL_MEAS 0xF4

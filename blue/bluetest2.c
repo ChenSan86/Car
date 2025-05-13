@@ -29,7 +29,7 @@ int setupSerial()
         wiringXGC();
         return -1;
     }
-    const char *device = "/dev/ttyS4";
+    const char *device = "/dev/ttyS1";
     wiringXSerial_t serial_config;
     serial_config.baud = 9600;
     serial_config.databits = 8;

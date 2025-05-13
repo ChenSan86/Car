@@ -1,5 +1,5 @@
 #include "global.h"
-//小车运动状态
+// 小车运动状态
 #define run_car '1'   // 按键前
 #define back_car '2'  // 按键后
 #define left_car '3'  // 按键左
@@ -8,41 +8,25 @@
 
 void serialEvent();
 void serial_data_parse_control();
-void serial_data_parse_face();
+
 void serial_data_parse_avoid();
-void serial_data_parse_follow();
+
 void serial_data_parse_greenred();
 void control();
 void avoid();
-void follow();
-void face();
 void greenred();
-
 
 int if_control = 0;
 int if_avoid = 0;
-int if_follow = 0;
+int if_send = 0;
 int if_face = 0;
 int if_greenred = 0;
 
 int fd_bluetooth;
 int init_blue();
-int initCar(){
-    if (wiringXSetup("milkv_duo", NULL) == -1)
-    {
-        wiringXGC();
-        return 1;
-    }
-    init_blue();
-    initServo();
-    init_bmp280();
-    init_tcs34725();
-    initDistance();
-    initTCP();
-    initSensor();
-    return 0;
-}
-int init_blue(){
+
+int init_blue()
+{
     wiringXSerial_t serial_config;
     serial_config.baud = 9600;
     serial_config.databits = 8;
@@ -67,7 +51,7 @@ enum
     enTLEFT,
     enTRIGHT
 } enCarState;
-//bluetooth control
+// bluetooth control
 /*串口数据设置*/
 char InputString[512] = {0}; // 用来储存接收到的内容
 int NewLineReceived = 0;     // 前一次数据结束标志
@@ -102,14 +86,20 @@ void itoa(int i, char *string)
     return;
 }
 //=============================control====================================
-void control(){
-    while(if_control){
-        serialEvent(fd_bluetooth);
+void control()
+{
+    NewLineReceived = 0;
+    memset(InputString, 0x00, sizeof(InputString));
+    while (if_control)
+    {
+        serialEvent();
         serial_data_parse_control();
+        delayMicroseconds(1000);
     }
 }
 
-void serial_data_parse_control(){
+void serial_data_parse_control()
+{
     if (StringFind((const char *)InputString, (const char *)"PTZ", 0) > 0)
     {
         int m_kp, i, ii;
@@ -147,31 +137,30 @@ void serial_data_parse_control(){
         // 小车鸣笛判断
         if (InputString[5] == '1') // 鸣笛
         {
-            whistle();
+            puts("mingdi");
         }
 
         // 舵机左旋右旋判断
         if (InputString[9] == '1') // 舵机旋转到180度
         {
-            turnRight();
+            puts("duoji");
         }
         if (InputString[9] == '2') // 舵机旋转到0度
         {
-            turnLeft();
+            puts("duoji");
         }
-        
-
         // 灭火判断
         if (InputString[15] == '1') // 灭火
         {
             // TODO: 灭火
             if_control = 0;
+            puts("退出手动模式");
         }
 
         // 舵机归为判断
         if (InputString[17] == '1') // 舵机旋转到90度
         {
-            center();
+            puts("duoji");
         }
 
         // 小车的前进,后退,左转,右转,停止动作
@@ -231,158 +220,322 @@ void serial_data_parse_control(){
             brake();
             break;
         }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
     }
 }
-// //=============================avoid====================================
-// void avoid(){
-//     while(if_avoid){
-//         serialEvent(fd_bluetooth);
-//         serial_data_parse_avoid();
-//     }
-// }
-// void serial_data_parse_avoid(){
-    
-// }
-// //=============================follow====================================
-// void serial_data_parse_follow(){
-//     if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
-//         StringFind((const char *)InputString, (const char *)"#", 0) > 0)
-//     {
-//         // miehuo
-//         if (InputString[15] == '1') // 灭火
-//         {
-//             // TODO: 灭火
-//             exit(0);
-//         }
-//         NewLineReceived = 0;
-//         memset(InputString, 0x00, sizeof(InputString));
-//         return;
-//     }
-// }
-// void follow(){
-    
-// }
-// // 跟踪控制参数
-// const float targetDistance = 30.0; // 目标跟随距离(cm)
-// const float baseSpeed = 0.5;       // 基础跟随速度(0-1)
-// const float turnGain = 0.3;        // 转向灵敏度(0-1)
-// const float maxDistance = 100.0;   // 最大有效距离(cm)
-// const float minDistance = 15.0;    // 最小安全距离(cm)
+//============================trace========================
+volatile bool exit_program_trace = false;
+volatile bool if_run_trace = false;
+float getdis()
+{
+    float distance;
+    float dis[10] = {0};
+    for (int i = 0; i < 10; i++)
+    {
+        dis[i] = getDistance();
+    }
+    distance = dis[0];
+    for (int i = 0; i < 10; i++)
+    {
+        if (dis[i] < distance)
+            distance = dis[i];
+    }
+    if (distance > 30)
+    {
+        distance = 30.0;
+    }
+    return distance;
+}
+float dis;
+void serial_data_parse_trace(){
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)    
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            exit_program_trace = true;
+            puts("执行灭火操作，退出循迹模式");
+            brake();
+            NewLineReceived = 0;
+            memset(InputString, 0x00, sizeof(InputString));
+            return;
+        }
+        if (InputString[3] == '1') //
+        {
+            if_run_trace = true;
+        }
+        else if (InputString[3] == '2') // 小车原地右旋
+        {
+            if_run_trace = false;
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
 
-// // 状态变量
-// float lastLeftIR = 0;
-// float lastRightIR = 0;
+void *loop_thread_trace(void *arg)
+{
+    while (!exit_program_trace)
+    {
+        
+        if (if_run_trace)
+        {
+            dis = getdis();
+            if (dis < 20){
+                brake();
+                delayMicroseconds(5000);
+            }
+            
+            else{
+                forward();
+                delayMicroseconds(5000);
+            }
+        }
+        else{
+            brake();
+        }
+    }
+}
+void *control_thread_trace(void *arg)
+{
+    while (!exit_program_trace)
+    {
+        serialEvent();
+        serial_data_parse_trace();
+        delayMicroseconds(1000);
+    }
+}
+void trace()
+{
+    NewLineReceived = 0;
+    memset(InputString, 0x00, sizeof(InputString));
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, loop_thread_trace, NULL);
+    pthread_create(&t2, NULL, control_thread_trace, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+}
 
-// // 智能跟踪主函数
-// void smartTracking()
-// {
-//     // 1. 获取当前传感器数据
-//     float distance = getDistance(); // 超声波距离
-//     int leftIR = getL();            // 左侧红外(0/1)
-//     int rightIR = getR();           // 右侧红外(0/1)
+//=============================avoid====================================
+volatile bool exit_program_avoid = false;
+volatile bool if_run = false;
+void serial_data_parse_avoid()
+{
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            exit_program_avoid = true;
+            puts("执行灭火操作，退出避障模式");
+            brake();
+            NewLineReceived = 0;
+            memset(InputString, 0x00, sizeof(InputString));
+            return;
+        }
+        if (InputString[3] == '1') //
+        {
+            if_run = true;
+        }
+        else if (InputString[3] == '2') // 小车原地右旋
+        {
+            if_run = false;
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
+void *control_thread_avoid(void *arg)
+{
+    while (!exit_program_avoid)
+    {
+        serialEvent();
+        serial_data_parse_avoid();
+        delayMicroseconds(1000);
+    }
+}
 
-//     // 2. 更新红外检测状态(带滤波)
-//     lastLeftIR = updateIRSmoothing(lastLeftIR, leftIR);
-//     lastRightIR = updateIRSmoothing(lastRightIR, rightIR);
+void *loop_thread_avoid(void *arg)
+{
+    while (!exit_program_avoid)
+    {
+        if (if_run)
+        {
+            dis = getdis();
+            if (dis < 20){
+                brake();
+                back();
+                puts("back");
+                delayMicroseconds(500000);
+                brake();
+                delayMicroseconds(1000000);
+                rotationL();
+                delayMicroseconds(2000000);
+                brake();
+                delayMicroseconds(1000000);
+            }else{
+                forward();
+            }
+        }
+        else{
+            brake();
 
-//     // 3. 安全边界检查
-//     if (distance < minDistance)
-//     {
-//         move(0, 0); // 紧急停止
-//         return;
-//     }
-
-//     if (distance > maxDistance)
-//     {
-//         move(0, 0); // 超出范围停止
-//         return;
-//     }
-
-//     // 4. 计算控制输出
-//     float leftSpeed, rightSpeed;
-//     calculateMovement(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
-
-//     // 5. 执行移动
-//     move(leftSpeed, rightSpeed);
-
-//     // 6. 调试输出(可选)
-//     debugOutput(distance, lastLeftIR, lastRightIR, leftSpeed, rightSpeed);
-// }
-
-// // 红外传感器状态更新(带滤波)
-// float updateIRSmoothing(float lastValue, int currentReading)
-// {
-//     // 当前检测到则设为1，否则缓慢衰减
-//     return currentReading ? 1.0 : max(0.0, lastValue - 0.1);
-// }
-
-// // 计算运动控制量
-// void calculateMovement(float distance, float leftIR, float rightIR,
-//                        float leftSpeed, float rightSpeed)
-// {
-//     // 计算距离误差 (归一化到[-1,1])
-//     float distanceError = (distance - targetDistance) / targetDistance;
-
-//     // 计算方向误差 (基于两侧红外检测)
-//     float directionError = rightIR - leftIR; // 正值表示目标偏右
-
-//     // 计算基础速度 (距离越接近目标速度越小)
-//     float speed = constrain(baseSpeed * (1.0 - abs(distanceError)), 0.2, baseSpeed);
-
-//     // 计算转向调整
-//     float turn = turnGain * directionError;
-
-//     // 基础运动控制
-//     leftSpeed = constrain(speed + turn, -1.0, 1.0);
-//     rightSpeed = constrain(speed - turn, -1.0, 1.0);
-
-//     // 增强转向逻辑 - 当目标明显偏向一侧时
-//     if (leftIR > 0.8 && rightIR < 0.2)
-//     {
-//         leftSpeed = -0.3; // 向左急转
-//         rightSpeed = 0.5;
-//     }
-//     else if (rightIR > 0.8 && leftIR < 0.2)
-//     {
-//         leftSpeed = 0.5; // 向右急转
-//         rightSpeed = -0.3;
-//     }
-// }
-
-// // 调试信息输出(可选)
-// void debugOutput(float dist, float lIR, float rIR, float lSpeed, float rSpeed)
-// {
-
-// }
+        }
+    }
+}
+void avoid()
+{
+    NewLineReceived = 0;
+    memset(InputString, 0x00, sizeof(InputString));
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, loop_thread_avoid, NULL);
+    pthread_create(&t2, NULL, control_thread_avoid, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+}
+//=============================trace====================================
 
 
-// //=============================face====================================
-// void serial_data_parse_face(){
-    
-// }
-// void faceDetect(){
-    
-// }
-// //=============================greenred====================================
-// void serial_data_parse_greenred(){
-//     if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
-//         StringFind((const char *)InputString, (const char *)"#", 0) > 0)
-//     {
-//         // miehuo
-//         if (InputString[15] == '1') // 灭火
-//         {
-//             // TODO: 灭火
-//             exit(0);
-//         }
-//         NewLineReceived = 0;
-//         memset(InputString, 0x00, sizeof(InputString));
-//         return;
-//     }
-// }
-// void greenredDetect(){
-    
-    
-// }
+//=============================greenred====================================
+volatile bool exit_program_greenred = false;
+int ri, gi, bi, li;
+char *str;
+void carryon()
+{
+    str = get_tcs34725_data();
+
+    if (str == NULL)
+    {
+        printf("get_tcs34725_data 返回 NULL\n");
+        return;
+    }
+    puts(str);
+    if (sscanf(str, "R:%d,G:%d,B:%d,%d", &ri, &gi, &bi, &li) == 4)
+    {
+        if (ri > 160)
+        {
+            Move(0, 0);
+            delayMicroseconds(1000);
+        }
+        else if (gi > 160)
+        {
+            Move(1, 1);
+            delayMicroseconds(1000);
+        }
+    }
+    delayMicroseconds(1000);
+}
+
+void serial_data_parse_greenred()
+{
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+
+            exit_program_greenred = true;
+            puts("执行灭火操作，退出红绿灯模式");
+            brake();
+
+            // 清空串口缓冲区
+            NewLineReceived = 0;
+            memset(InputString, 0x00, sizeof(InputString));
+            return;
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
+
+void *control_thread_redgreen(void *arg)
+{
+    while (!exit_program_greenred)
+    {
+        serialEvent();
+        serial_data_parse_greenred();
+    }
+    return NULL;
+}
+void *loop_thread_redgreen(void *arg)
+{
+    while (!exit_program_greenred)
+    {
+        carryon();
+    }
+    return NULL;
+}
+void greenred()
+{
+    NewLineReceived = 0;
+    memset(InputString, 0x00, sizeof(InputString));
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, loop_thread_redgreen, NULL);
+    pthread_create(&t2, NULL, control_thread_redgreen, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+}
+//=============================senddata====================================
+void serial_data_postback();
+volatile bool exit_program_send = false;
+void serial_data_parse_send()
+{
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            exit_program_send = true;
+            puts("执行灭火操作，退出发送信息模式");
+            NewLineReceived = 0;
+            memset(InputString, 0x00, sizeof(InputString));
+            return;
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
+void serial_data_postback();
+void *loop_thread_send(void *arg)
+{
+    while (!exit_program_send)
+    {
+        serial_data_postback();
+        delayMicroseconds(1000000);
+    }
+    printf("循环线程结束。\n");
+    return NULL;
+}
+void *control_thread_send(void *arg)
+{
+    while (!exit_program_send)
+    {
+        serialEvent();
+        serial_data_parse_send();
+    }
+    return NULL;
+}
+void senddata()
+{
+    NewLineReceived = 0;
+    memset(InputString, 0x00, sizeof(InputString));
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, loop_thread_send, NULL);
+    pthread_create(&t2, NULL, control_thread_send, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+}
+
 //=============================main====================================
 
 void serial_data_parse()
@@ -402,19 +555,31 @@ void serial_data_parse()
             switch (mode)
             {
             case 21:
-                printf("→ 启动巡线模式\n");
+                printf("→ 启动数据发送模式\n");
+                exit_program_send = false;
+                senddata();
+                puts("退出数据发送模式");
                 break;
             case 31:
                 printf("→ 启动避障模式\n");
+                exit_program_avoid = false;
+                avoid();
+                puts("退出避障模式");
                 break;
             case 41:
-                printf("→ 启动七彩灯模式\n");
+                printf("→ 启动手动控制模式\n");
+                if_control = 1;
+                control();
                 break;
             case 51:
-                printf("→ 启动寻光模式\n");
+                printf("→ 启动红绿灯模式\n");
+                exit_program_greenred = false;
+                greenred();
                 break;
             case 61:
                 printf("→ 启动跟随模式\n");
+                exit_program_trace = false;
+                trace();
                 break;
             default:
                 printf("→ 未知模式：%d\n", mode);
@@ -428,7 +593,7 @@ void serial_data_parse()
     if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
         StringFind((const char *)InputString, (const char *)"#", 0) > 0)
     {
-        //miehuo
+        // miehuo
         if (InputString[15] == '1') // 灭火
         {
             // TODO: 灭火
@@ -446,26 +611,19 @@ void serial_data_postback()
     char str[25];
     float distance;
     memset(ReturnTemp, 0, sizeof(ReturnTemp));
-    distance = getDistance();
+    distance = getdis();
     if ((int)distance == -1)
     {
         distance = 0;
     }
-    strcat(p, "$4WD,CSB");
+    strcat(p, "info{dis:");
     itoa((int)distance, str);
     strcat(p, str);
-    strcat(p, get_bmp280_data());
-    strcat(p, ",LF");
+    strcat(p, ",trace:");
     strcat(p, getTraceData());
     // 红外避障
-    strcat(p, ",HW");
+    strcat(p, ",rl:");
     strcat(p, getRL());
-    // 光传感器
-    strcat(p, ",RGB");
-    strcat(p, get_tcs34725_data());
-    strcat(p, ",PEOPLE");
-    //TODO: 人检测
-
     strcat(p, "#");
     // 将ReturnTemp所指的内容写入到串口设备中
 
@@ -517,17 +675,35 @@ void serialEvent()
         }
     }
 }
-//TEST
+// TEST
 
-
-
-//TEST
-int main(){
+// TEST
+int main()
+{
     if (wiringXSetup("milkv_duo", NULL) == -1)
     {
         wiringXGC();
         return -1;
     }
-    distance_test();
-    return 0;
+
+    init_blue();
+    initMove();
+    initTCP();
+    initDistance();
+    blink(3);
+    // initTCP();
+
+    initSensor();
+    while (1)
+    {
+        serialEvent();
+        serial_data_parse();
+        delayMicroseconds(1000);
+    }
+    while (1){
+        printf("%f\n",getDistance());
+        delayMicroseconds(10000);
+    }
+
 }
+

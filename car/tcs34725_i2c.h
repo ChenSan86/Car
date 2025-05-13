@@ -9,6 +9,7 @@ extern "C"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#define I2C_RGB "/dev/i2c-1"
 
 #define TCS34725_ADDR (0x29)        // 设备地址 Device address
 #define TCS34725_COMMAND_BIT (0x80) // 命令字节 command byte
@@ -84,6 +85,7 @@ extern "C"
     extern struct tcs34725_config_t tcs34725_config;
     int init_tcs34725();
     char *get_tcs34725_data();
+    void get_rgb(int *a);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

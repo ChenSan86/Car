@@ -10,7 +10,7 @@ int counter = 0;
 
 int main()
 {
-    const char *device = "/dev/ttyS4"; // 串口设备名
+    const char *device = "/dev/ttyS1"; // 串口设备名
     wiringXSerial_t serial_config;
     serial_config.baud = 9600;
     serial_config.databits = 8;
@@ -30,7 +30,8 @@ int main()
         int data = wiringXSerialDataAvail(fd);
         if (data > 0)
         {
-            wiringXSerialGetChar(fd);
+            int a = wiringXSerialGetChar(fd);
+            printf("%c", a);
             fflush(stdout);
         }
     }

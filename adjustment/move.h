@@ -3,9 +3,8 @@
 #include <stdio.h>
 #include <wiringx.h>
 #include <unistd.h>
-
-#define PWM_1 12
-#define PWM_2 13
+#define PWM_1 7
+#define PWM_2 6
 #define EN1 15 // forward = 1
 #define EN2 14
 #define EN3 16 // forward = 1

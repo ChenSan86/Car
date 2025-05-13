@@ -1,4 +1,4 @@
-scp -O tcs34725_i2c root@192.168.42.1:/root/
+scp -O bluetest root@192.168.42.1:/root/
 首先控制函数都包含在move.h文件中
 核心函数有motor_run（long left，long right）
 这个函数会接收两个long值，分别代表左右轮的速度具体意义为每个电机最大速度的百分比（例如填88，电机就会转到最大速度的88%，填0就会静止，填负数会反转）
@@ -20,9 +20,17 @@ duo-pinmux -w GP2/PWM_10
 duo-pinmux -w GP3/PWM_11
 duo-pinmux -w GP12/UART1_TX
 duo-pinmux -w GP13/UART1_RX
-duo-pinmux -w GP9/PWM_4
-duo-pinmux -w GP8/GP8
-duo-pinmux -w GP6/IIC3_SDA
-duo-pinmux -w GP7/IIC3_SCL
+duo-pinmux -w GP9/IIC1_SCL
+duo-pinmux -w GP8/IIC1_SDA
+duo-pinmux -w GP6/PWM_9
+duo-pinmux -w GP7/PWM_8
 duo-pinmux -w GP4/UART3_TX
 duo-pinmux -w GP5/UART3_RX
+
+
+
+巡线--
+避障--避障
+七彩--控制模式
+跟随--跟随
+寻光--红绿灯

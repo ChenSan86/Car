@@ -9,6 +9,7 @@ int initTCP()
         printf("WiringX初始化失败！\n");
         return -1;
     }
+    puts("tcp初始化开始");
     wiringXSerial_t serial_config;
     serial_config.baud = 115200;
     serial_config.databits = 8;
@@ -24,8 +25,6 @@ int initTCP()
     }
     printf("串口打开成功，开始接收数据...\n");
     wiringXSerialFlush(fd_tcp);
-    wiringXSerialPrintf(fd_tcp, "AT+RST\r\n");
-    sleep(5);
     // 修正AT指令格式
     wiringXSerialPrintf(fd_tcp, "AT+CIPSTART=\"TCP\",\"%s\",%d\r\n", PC_IP, PORT);
     sleep(5);
@@ -34,7 +33,7 @@ int initTCP()
 void sendTCP(char *data){
     int len = strlen(data);
     wiringXSerialPrintf(fd_tcp, "AT+CIPSEND=%d\r\n", len);
-    delayMicroseconds(50000);
+    delayMicroseconds(500000);
     wiringXSerialPrintf(fd_tcp, "%s%c", data, 0x1A);
-    delayMicroseconds(50000);
+    delayMicroseconds(500000);
 }

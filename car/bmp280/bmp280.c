@@ -1,4 +1,5 @@
 #include "bmp280.h"
+
 int fd_bmp280;
 int32_t raw_temperature;
 int32_t raw_pressure;
@@ -60,14 +61,13 @@ int32_t bmp280_convert(int32_t temp, struct bmp280_calib_param *params)
 
 int32_t bmp280_convert_temp(int32_t temp, struct bmp280_calib_param *params)
 {
-    // uses the BMP280 calibration parameters to compensate the temperature value read from its registers
+
     int32_t t_fine = bmp280_convert(temp, params);
     return (t_fine * 5 + 128) >> 8;
 }
 
 int32_t bmp280_convert_pressure(int32_t pressure, int32_t temp, struct bmp280_calib_param *params)
 {
-    // uses the BMP280 calibration parameters to compensate the pressure value read from its registers
 
     int32_t t_fine = bmp280_convert(temp, params);
 
@@ -81,7 +81,7 @@ int32_t bmp280_convert_pressure(int32_t pressure, int32_t temp, struct bmp280_ca
     var1 = ((((32768 + var1)) * ((int32_t)params->dig_p1)) >> 15);
     if (var1 == 0)
     {
-        return 0; // avoid exception caused by division by zero
+        return 0; 
     }
     converted = (((uint32_t)(((int32_t)1048576) - pressure) - (var2 >> 12))) * 3125;
     if (converted < 0x80000000)
