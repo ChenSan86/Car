@@ -33,7 +33,7 @@
  */
 
 //使用到的I2C端口 depends on which port to use
-#define I2C_DEV "/dev/i2c-3"
+#define I2C_DEV "/dev/i2c-1"
 
 int fd_i2c;
 

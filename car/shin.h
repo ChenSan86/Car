@@ -3,15 +3,15 @@
 //循迹
 #define I2C_TRACE "/dev/i2c-0"
 //蓝牙
-#define UART_BLUETOOTH "/dev/ttyS1"
+#define UART_BLUETOOTH "/dev/ttyS4"
 //网络
 #define UART_NET "/dev/ttyS3"
 //RGB传感器
-
+#define I2C_RGB "/dev/i2c-1"
 //舵机
-#define PWM_SREVO 50
+#define PWM_SREVO 8
 //BMP280
-#define I2C_BMP "/dev/i2c-2"
+#define I2C_BMP "/dev/i2c-3"
 //L298N
 #define PWM_1 7
 #define PWM_2 6

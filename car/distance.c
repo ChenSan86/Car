@@ -49,6 +49,6 @@ int getL(){
     return digitalRead(RED_L);
 }
 char* getRL(){
-    sprintf(data_dis, ":L%dR%d", getR(), getL());
+    sprintf(data_dis, "AVOID:%d%d", getR(), getL());
     return data_dis;
 }

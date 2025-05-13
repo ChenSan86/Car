@@ -34,3 +34,14 @@ duo-pinmux -w GP5/UART3_RX
 七彩--控制模式
 跟随--跟随
 寻光--红绿灯
+duo-pinmux -w GP4/UART3_TX
+duo-pinmux -w GP5/UART3_RX
+duo-pinmux -w GP2/UART4_TX
+duo-pinmux -w GP3/UART4_RX
+duo-pinmux -w GP6/IIC3_SDA
+duo-pinmux -w GP7/IIC3_SCL
+duo-pinmux -w GP8/PWM_7
+duo-pinmux -w GP9/GP9
+duo-pinmux -w GP12/PW_4
+duo-pinmux -w GP13/PW_5
+

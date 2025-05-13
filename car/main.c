@@ -80,9 +80,9 @@ int StringFind(const char *pSrc, const char *pDst, int v_iStartPos)
     }
     return -1;
 }
-void itoa(int i, char *string)
+void itoa(float i, char *string)
 {
-    sprintf(string, "%d", i);
+    sprintf(string, "%.1f", i);
     return;
 }
 //=============================control====================================
@@ -242,10 +242,10 @@ float getdis()
         if (dis[i] < distance)
             distance = dis[i];
     }
-    if (distance > 30)
-    {
-        distance = 30.0;
-    }
+    // if (distance > 30)
+    // {
+    //     distance = 30.0;
+    // }
     return distance;
 }
 float dis;
@@ -445,6 +445,7 @@ void serial_data_parse_greenred()
             puts("执行灭火操作，退出红绿灯模式");
             brake();
 
+            
             // 清空串口缓冲区
             NewLineReceived = 0;
             memset(InputString, 0x00, sizeof(InputString));
@@ -616,19 +617,22 @@ void serial_data_postback()
     {
         distance = 0;
     }
-    strcat(p, "info{dis:");
-    itoa((int)distance, str);
-    strcat(p, str);
-    strcat(p, ",trace:");
+
+//#示例AT指令 : AT + SENSOR = TEMP : 25.5, PRESS : 101.3, TRACK : 01011011, AVOID : 01, COLOR : 255 - 128 - 64, DIST : 35.2
+    itoa(distance, str);
+    strcat(p, get_bmp280_data());
+    strcat(p, ",");
     strcat(p, getTraceData());
     // 红外避障
-    strcat(p, ",rl:");
+    strcat(p, ",");
     strcat(p, getRL());
-    strcat(p, "#");
+    strcat(p, ",");
+    strcat(p, get_tcs34725_data());
+    strcat(p, ",DIST:");
+    strcat(p, str);
     // 将ReturnTemp所指的内容写入到串口设备中
-
     printf("ReturnTemp:%s\n", p);
-    sendTCP(p);
+    //sendTCP(p);
     return;
 }
 void serialEvent()
@@ -690,20 +694,28 @@ int main()
     initMove();
     initTCP();
     initDistance();
-    blink(3);
     // initTCP();
 
     initSensor();
+    init_bmp280();
+    init_tcs34725();
+    blink(3);
     while (1)
     {
-        serialEvent();
-        serial_data_parse();
-        delayMicroseconds(1000);
+        serial_data_postback();
+        delayMicroseconds(1000000);
     }
-    while (1){
-        printf("%f\n",getDistance());
-        delayMicroseconds(10000);
-    }
+    
 
+    // while (1)
+    // {
+    //     serialEvent();
+    //     serial_data_parse();
+    //     delayMicroseconds(1000);
+    // }
+    // while (1){
+    //     printf("%f\n",getDistance());
+    //     delayMicroseconds(10000);
+    // }
 }
 

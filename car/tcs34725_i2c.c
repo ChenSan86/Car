@@ -134,6 +134,7 @@ int init_tcs34725()
 }
 char* get_tcs34725_data(){
     get_tcs34725_rgbc(&r, &g, &b, &l);
-    sprintf(ReturnTemp_tcs,"R:%d,G:%d,B:%d,%d",r,g,b,l);
+    sprintf(ReturnTemp_tcs,"COLOR:%d-%d-%d",r,g,b);
     return ReturnTemp_tcs;
 }
+// COLOR:255-128-64

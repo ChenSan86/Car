@@ -26,7 +26,7 @@
  */
 
 // depends on which port to use
-#define I2C_DEV "/dev/i2c-1"
+#define I2C_DEV "/dev/i2c-3"
 
 // device has default bus address of 0x76
 #define I2C_ADDR  0x77

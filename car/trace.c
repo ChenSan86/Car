@@ -32,6 +32,6 @@ void getTrace(int *s)
 char *getTraceData(){
     int s[8];
     getTrace(s);
-    sprintf(data, "%d%d%d%d%d%d%d%d", s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
+    sprintf(data, "TRACK:%d%d%d%d%d%d%d%d", s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
     return data;
 }
