@@ -242,10 +242,10 @@ float getdis()
         if (dis[i] < distance)
             distance = dis[i];
     }
-    // if (distance > 30)
-    // {
-    //     distance = 30.0;
-    // }
+    if(distance > 50){
+        distance = 50;
+    }
+
     return distance;
 }
 float dis;
@@ -287,12 +287,12 @@ void *loop_thread_trace(void *arg)
             dis = getdis();
             if (dis < 20){
                 brake();
-                delayMicroseconds(5000);
+                delayMicroseconds(500);
             }
             
             else{
                 forward();
-                delayMicroseconds(5000);
+                delayMicroseconds(500);
             }
         }
         else{
@@ -376,7 +376,7 @@ void *loop_thread_avoid(void *arg)
                 brake();
                 delayMicroseconds(1000000);
                 rotationL();
-                delayMicroseconds(2000000);
+                delayMicroseconds(1000000);
                 brake();
                 delayMicroseconds(1000000);
             }else{
@@ -409,6 +409,7 @@ char *str;
 void carryon()
 {
     str = get_tcs34725_data();
+    int a[3]={0};
 
     if (str == NULL)
     {
@@ -416,16 +417,19 @@ void carryon()
         return;
     }
     puts(str);
-    if (sscanf(str, "R:%d,G:%d,B:%d,%d", &ri, &gi, &bi, &li) == 4)
+    if (sscanf(str, "COLOR:%d-%d-%d", &ri, &gi, &bi) == 3)
     {
-        if (ri > 160)
+        if (ri > 180)
         {
-            Move(0, 0);
+            brake();
             delayMicroseconds(1000);
         }
-        else if (gi > 160)
+        else if (gi > 180)
         {
-            Move(1, 1);
+            forward();
+            delayMicroseconds(1000);
+        }else{
+            brake();
             delayMicroseconds(1000);
         }
     }
@@ -512,7 +516,6 @@ void *loop_thread_send(void *arg)
     while (!exit_program_send)
     {
         serial_data_postback();
-        delayMicroseconds(1000000);
     }
     printf("循环线程结束。\n");
     return NULL;
@@ -607,7 +610,6 @@ void serial_data_parse()
 }
 void serial_data_postback()
 {
-    //$4WD,CSB120,PV8.3,GS214,LF1011,HW11,GM11#
     char *p = ReturnTemp;
     char str[25];
     float distance;
@@ -623,16 +625,14 @@ void serial_data_postback()
     strcat(p, get_bmp280_data());
     strcat(p, ",");
     strcat(p, getTraceData());
-    // 红外避障
     strcat(p, ",");
     strcat(p, getRL());
     strcat(p, ",");
     strcat(p, get_tcs34725_data());
     strcat(p, ",DIST:");
     strcat(p, str);
-    // 将ReturnTemp所指的内容写入到串口设备中
     printf("ReturnTemp:%s\n", p);
-    //sendTCP(p);
+    sendTCP(p);
     return;
 }
 void serialEvent()
@@ -665,7 +665,6 @@ void serialEvent()
                     NewLineReceived = 1;
                     StartBit = 0;
                     g_packnum = g_num;
-                    //  printf("inputstring:%s\n", InputString);
                 }
                 g_num++;
 
@@ -679,9 +678,6 @@ void serialEvent()
         }
     }
 }
-// TEST
-
-// TEST
 int main()
 {
     if (wiringXSetup("milkv_duo", NULL) == -1)
@@ -694,28 +690,15 @@ int main()
     initMove();
     initTCP();
     initDistance();
-    // initTCP();
-
     initSensor();
     init_bmp280();
     init_tcs34725();
-    blink(3);
     while (1)
     {
-        serial_data_postback();
-        delayMicroseconds(1000000);
+        serialEvent();
+        serial_data_parse();
+        delayMicroseconds(1000);
     }
-    
-
-    // while (1)
-    // {
-    //     serialEvent();
-    //     serial_data_parse();
-    //     delayMicroseconds(1000);
-    // }
-    // while (1){
-    //     printf("%f\n",getDistance());
-    //     delayMicroseconds(10000);
-    // }
+    initServo();
 }
 

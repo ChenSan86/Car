@@ -13,8 +13,8 @@
 //BMP280
 #define I2C_BMP "/dev/i2c-3"
 //L298N
-#define PWM_1 7
-#define PWM_2 6
+#define PWM_1 13
+#define PWM_2 12
 #define EN1 15 // forward = 1
 #define EN2 14
 #define EN3 16 // forward = 1

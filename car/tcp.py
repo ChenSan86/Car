@@ -16,9 +16,6 @@ def main():
                 if not data:
                     break
                 print(f"Received: {data.decode(errors='ignore')}")
-                
-                # 可发送控制指令给小车
-                # 示例：收到数据后自动发送“MOVE_FORWARD”
                 conn.sendall(b"MOVE_FORWARD\n")
 
 if __name__ == '__main__':

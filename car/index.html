@@ -110,7 +110,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>小车传感器监控系统 (AT指令版)</h1>
+        <h1>小车传感器监控系统</h1>
         
         <div id="connection-status" class="connection-status disconnected">
             未连接
@@ -165,7 +165,7 @@
         </div>
         
         <div class="card">
-            <h2>原始AT指令数据</h2>
+            <h2>原始指令数据</h2>
             <div class="raw-data" id="raw-data">等待数据...</div>
         </div>
     </div>
@@ -193,7 +193,7 @@
         }
         
         // 连接到WebSocket服务器
-        const socket = io('http://localhost:5000');
+        const socket = io('http://192.168.114.147:8080');
         
         // 连接状态处理
         socket.on('connect', () => {

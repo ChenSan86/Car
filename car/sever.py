@@ -21,16 +21,10 @@ sensor_data = {
     'timestamp': None
 }
 
-def parse_at_command(at_command):
-    """解析AT指令格式的传感器数据"""
+def parse_sensor_data(data_str):
+    """解析传感器数据字符串"""
     try:
-        # 示例AT指令: AT+SENSOR=TEMP:25.5,PRESS:101.3,TRACK:01011011,AVOID:01,COLOR:255-128-64,DIST:35.2
-        if not at_command.startswith("AT+SENSOR="):
-            return None
-        
-        data_str = at_command[len("AT+SENSOR="):]
         data_parts = data_str.split(',')
-        
         parsed_data = {}
         
         for part in data_parts:
@@ -59,7 +53,7 @@ def parse_at_command(at_command):
         return parsed_data
         
     except Exception as e:
-        print(f"Error parsing AT command: {e}")
+        print(f"Error parsing sensor data: {e}")
         return None
 
 @app.route('/api/sensor-data', methods=['GET'])
@@ -67,19 +61,19 @@ def get_sensor_data():
     """获取当前传感器数据"""
     return jsonify(sensor_data)
 
-@app.route('/api/at-command', methods=['POST'])
-def receive_at_command():
-    """接收小车发送的AT指令格式数据"""
+@app.route('/api/sensor-data', methods=['POST'])
+def receive_sensor_data():
+    """接收小车发送的传感器数据"""
     global sensor_data
     
     # 获取原始数据
     raw_data = request.data.decode('utf-8').strip()
     print(f"Received raw data: {raw_data}")
-    
-    # 解析AT指令
-    parsed_data = parse_at_command(raw_data)
+
+    # 解析数据
+    parsed_data = parse_sensor_data(raw_data)
     if not parsed_data:
-        return jsonify({"status": "error", "message": "Invalid AT command format"})
+        return jsonify({"status": "error", "message": "Invalid data format"})
     
     # 更新传感器数据
     sensor_data.update(parsed_data)
@@ -88,7 +82,7 @@ def receive_at_command():
     # 通过WebSocket广播新数据
     socketio.emit('sensor_update', sensor_data)
     
-    return jsonify({"status": "success", "message": "AT command processed"})
+    return jsonify({"status": "success", "message": "Data received"})
 
 def background_thread():
     """模拟数据更新线程"""
@@ -101,4 +95,4 @@ if __name__ == '__main__':
     # 启动后台线程
     threading.Thread(target=background_thread, daemon=True).start()
     # 启动服务器
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=8080, debug=True)
