@@ -1,6 +1,6 @@
 #include "shin.h"
 #include "move.h"
-int speedr = 90, speedl = 90;
+int speedr = 80, speedl = 80;
 int initMove()
 {
     wiringXPWMSetPeriod(PWM_1, PERIOD); // 500us
@@ -106,7 +106,7 @@ void Move_left_angle(int angle) // 左转
 void Move_right_angle(int angle) // 左转
 {
     Move(1, -1);
-    delayMicroseconds(angle * 550 / 90);
+    delayMicroseconds(600000);
     Move(0, 0);
     delayMicroseconds(100);
 }

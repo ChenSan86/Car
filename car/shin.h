@@ -28,7 +28,7 @@
 #define TRIG 21
 #define ECHO 20
 //喇叭
-#define WHISTLE 8
+#define WHISTLE 9
 //blink
 #define BLINK 25
 //include 

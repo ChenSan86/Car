@@ -137,7 +137,7 @@ void serial_data_parse_control()
         // 小车鸣笛判断
         if (InputString[5] == '1') // 鸣笛
         {
-            puts("mingdi");
+            whistle();
         }
 
         // 舵机左旋右旋判断
@@ -224,6 +224,128 @@ void serial_data_parse_control()
         memset(InputString, 0x00, sizeof(InputString));
         return;
     }
+}//=====================follow=======================
+#define Kp 2
+#define Ki 0
+#define Kd 1.5
+
+float er[8] = {3.4, 1.8, 1.0, 0.2, -0.2, -1.0, -1.8, -3.4};
+int sensorValues[8] = {0};
+volatile bool if_running_follow = false;
+volatile bool exit_program_follow = false;
+
+float calculateError(int *s)
+{
+    float error = 0;
+    float sum = 0;
+    for (int i = 0; i < 8; i++)
+        if (s[i] == 0)
+            error += er[i], sum++;
+
+    if (sum == 0)
+        return -100;
+    return error / sum;
+}
+void Auto_tracking_mode() // 自动循迹模式
+{
+    // PID variables
+    float lastError = 0;
+    float integral = 0;
+    speedl = 100, speedr = 100;
+    int presec = 0;
+    int fx = 0;
+    while (1)
+    {
+
+        getTrace(sensorValues);
+        float error = calculateError(sensorValues);
+        if (error == -100)
+        {
+            while (1)
+            {
+                getTrace(sensorValues);
+                float error = calculateError(sensorValues);
+                if (error != -100)
+                    break;
+                Move(fx, -fx);
+                delayMicroseconds(1000);
+            }
+            continue;
+        }
+        if (!(sensorValues[0] | sensorValues[1]))
+            fx = -2;
+        if (!(sensorValues[6] | sensorValues[7]))
+            fx = 2;
+        float derivative = error - lastError;
+        integral += error;
+        float speedDifference = Kp * error + Ki * integral + Kd * derivative;
+        float leftSpeed = 1.0 - speedDifference;
+        float rightSpeed = 1.0 + speedDifference;
+        if (leftSpeed > 1)
+            leftSpeed = 1;
+        if (rightSpeed > 1)
+            rightSpeed = 1;
+        if (leftSpeed < -1)
+            leftSpeed = -1;
+        if (rightSpeed < -1)
+            rightSpeed = -1;
+        Move(leftSpeed, rightSpeed);
+        delayMicroseconds(1000);
+        lastError = error;
+    }
+}
+void serial_data_parse_follow()
+{
+    if (StringFind((const char *)InputString, (const char *)"4WD", 0) == -1 &&
+        StringFind((const char *)InputString, (const char *)"#", 0) > 0)
+    {
+        // miehuo
+        if (InputString[15] == '1') // 灭火
+        {
+            exit_program_follow = true;
+            puts("执行灭火操作，退出循迹模式");
+            brake();
+            NewLineReceived = 0;
+            memset(InputString, 0x00, sizeof(InputString));
+            return;
+        }
+        if (InputString[3] == '1') //
+        {
+            if_running_follow = true;
+        }
+        else if (InputString[3] == '2') // 小车原地右旋
+        {
+            if_running_follow = false;
+        }
+        NewLineReceived = 0;
+        memset(InputString, 0x00, sizeof(InputString));
+        return;
+    }
+}
+void *loop_thread_follow(void *arg)
+{
+    while (!exit_program_follow)
+    {
+        if (if_running_follow){
+            Auto_tracking_mode();
+        }
+    }
+}
+void *control_thread_follow(void *arg){
+    while (!exit_program_follow){
+        serialEvent();
+        serial_data_parse_follow();
+        delayMicroseconds(1000);
+    }
+}
+void follow(){
+    NewLineReceived = 0;
+    memset(InputString, 0x00, sizeof(InputString));
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, loop_thread_follow, NULL);
+    pthread_create(&t2, NULL, control_thread_follow, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
 }
 //============================trace========================
 volatile bool exit_program_trace = false;
@@ -287,12 +409,9 @@ void *loop_thread_trace(void *arg)
             dis = getdis();
             if (dis < 20){
                 brake();
-                delayMicroseconds(500);
             }
-            
             else{
                 forward();
-                delayMicroseconds(500);
             }
         }
         else{
@@ -375,7 +494,7 @@ void *loop_thread_avoid(void *arg)
                 delayMicroseconds(500000);
                 brake();
                 delayMicroseconds(1000000);
-                rotationL();
+                Move_right_angle(90);
                 delayMicroseconds(1000000);
                 brake();
                 delayMicroseconds(1000000);
@@ -385,7 +504,6 @@ void *loop_thread_avoid(void *arg)
         }
         else{
             brake();
-
         }
     }
 }
@@ -559,10 +677,10 @@ void serial_data_parse()
             switch (mode)
             {
             case 21:
-                printf("→ 启动数据发送模式\n");
-                exit_program_send = false;
-                senddata();
-                puts("退出数据发送模式");
+                printf("→ 启动循线模式\n");
+                exit_program_follow = false;
+                follow();
+                puts("退出循线模式");
                 break;
             case 31:
                 printf("→ 启动避障模式\n");
@@ -633,6 +751,7 @@ void serial_data_postback()
     strcat(p, str);
     printf("ReturnTemp:%s\n", p);
     sendTCP(p);
+    memset(ReturnTemp, 0, sizeof(ReturnTemp));
     return;
 }
 void serialEvent()
@@ -641,6 +760,7 @@ void serialEvent()
     char uartvalue = 0;
     while (1)
     {
+
         UartReturnCount = wiringXSerialDataAvail(fd_bluetooth);
         if (UartReturnCount == 0)
         {
@@ -676,6 +796,7 @@ void serialEvent()
                 }
             }
         }
+
     }
 }
 int main()
@@ -685,20 +806,22 @@ int main()
         wiringXGC();
         return -1;
     }
-
-    init_blue();
     initMove();
+    init_tcs34725();
+    init_blue();
+
     initTCP();
     initDistance();
     initSensor();
     init_bmp280();
-    init_tcs34725();
     while (1)
     {
         serialEvent();
         serial_data_parse();
-        delayMicroseconds(1000);
+        serial_data_postback();
+        delayMicroseconds(100000);
     }
     initServo();
 }
+
 

@@ -1,6 +1,15 @@
 import socket
+import requests
 HOST = '0.0.0.0'  # 接收任意IP连接
-PORT = 8080
+PORT = 8081
+def forward_to_server(data_str):
+    """简单的数据转发函数"""
+    try:
+        requests.post('http://localhost:8080/api/sensor-data', 
+                     data=data_str.encode('utf-8'),
+                     timeout=1)
+    except:
+        pass  # 静默失败，不干扰主程序
 
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
@@ -16,7 +25,8 @@ def main():
                 if not data:
                     break
                 print(f"Received: {data.decode(errors='ignore')}")
-                conn.sendall(b"MOVE_FORWARD\n")
+                # 简单地将数据转发到服务器
+                forward_to_server(data.decode(errors='ignore'))
 
 if __name__ == '__main__':
     main()
