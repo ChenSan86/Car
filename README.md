@@ -1,7 +1,17 @@
-# Milk-V Duo Examples
-English | [简体中文](./README-zh.md)
+# RC Car Based on Milkv Duo
 
-This project provides some examples of developing applications using C/C++ in a Linux environment, which can be run on the `Milk-V Duo` device.
+
+## Function
+
+- 黑线循迹
+- 超声波避障
+- 传感器数据上传
+- 超声波跟随
+- 蓝牙遥控
+
+## Display
+
+- [bilibili-RC Car Based on Milkv Duo](https://www.bilibili.com/video/BV1F3EkzDEBd/?spm_id_from=333.1387.homepage.video_card.click&vd_source=f9fb1e3c2eb7577a83ee975e919c23b9)
 
 ## Build environment on Ubuntu20.04
 
@@ -97,31 +107,6 @@ Once you have finished testing the `blink` program implemented in C, if you want
 ```
 mv /mnt/system/blink.sh_backup /mnt/system/blink.sh && sync
 ```
-
-## I2C
-
-App|Description
----|---
-[bmp280_i2c](i2c/bmp280_i2c) | By connecting the temperature and pressure sensor `BMP280` through the I2C interface, you can read the current temperature and pressure values.
-[vl53l0x_i2c](i2c/vl53l0x_i2c) | Read the Time of Flight sensor `VL53L0X` module to get the measured distance.
-[ssd1306_i2c](i2c/ssd1306_i2c) | Displaying strings on `SSD1306` OLED display via I2C interface.
-[adxl345_i2c](i2c/adxl345_i2c) | Read the acceleration data obtained by `ADXL345` through the I2C interface, once every 1 sencond.
-[lcm1602_i2c](i2c/lcm1602_i2c) | Display string on `1602 LCD` screen via I2C interface.
-[lcm2004_i2c](i2c/lcm2004_i2c) | Display string on `2004 LCD` screen via I2C interface.
-[tcs34725_i2c](i2c/tcs34725_i2c) | Read the `TCS34725` color sensor through the I2C interface and output the obtained data.
-
-## SPI
-
-App|Description
----|---
-[max6675_spi](spi/max6675_spi) | Connect the K-type thermocouple measurement module `MAX6675` through the SPI interface to measure the temperature on the current sensor.
-[rc522_spi](spi/rc522_spi) | Connect the `RC522` RFID reading and writing module through the SPI interface, read the card ID and type and output it to the screen.
-
-## AnalogRead (ADC)
-
-This example enables the CV180x 12bit resolution analog-digital converter module, called SARADC. [/adc/](/adc) has two examples to run the module, first is an [sh script](adc/adcRead.sh) and the other one is [C source file](adc/adcRead.c), which can be easy compiled with TinyCC on Duo board.
-
-The SARADC utilization reference is the [CV180x CV181x Peripheral Drive Operation Guide](adc/PeripheralDriverOperationGuide_en.pdf).
 
 # About Milk-V
 
